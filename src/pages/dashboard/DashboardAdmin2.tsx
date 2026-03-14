@@ -90,14 +90,20 @@ const DashboardAdmin2 = () => {
           };
         };
 
+        const getListData = <T,>(response: unknown): T[] => {
+          if (!response || typeof response !== 'object') return [];
+          const parsed = response as { success?: boolean; data?: { data?: T[] } };
+          return parsed.success ? (parsed.data?.data || []) : [];
+        };
+
         const rgPedidos = [
-          ...((rgPendente.success && rgPendente.data?.data) ? rgPendente.data.data : []),
-          ...((rgConfirmado.success && rgConfirmado.data?.data) ? rgConfirmado.data.data : []),
+          ...getListData<PdfRgPedido>(rgPendente),
+          ...getListData<PdfRgPedido>(rgConfirmado),
         ].map(mapRg);
 
         const pdfPedidos = [
-          ...((pdfPendente.success && pdfPendente.data?.data) ? pdfPendente.data.data : []),
-          ...((pdfConfirmado.success && pdfConfirmado.data?.data) ? pdfConfirmado.data.data : []),
+          ...getListData<EditarPdfPedido>(pdfPendente),
+          ...getListData<EditarPdfPedido>(pdfConfirmado),
         ].map(mapPdf);
 
         const ranking = [...rgPedidos, ...pdfPedidos]
