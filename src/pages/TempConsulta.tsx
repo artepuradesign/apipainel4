@@ -47,14 +47,31 @@ const hasValue = (value: unknown) => {
 
 const parseArrayData = <T = unknown,>(value: unknown): T[] => {
   if (Array.isArray(value)) return value as T[];
+
   if (typeof value === 'string') {
     try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? (parsed as T[]) : [];
+      return parseArrayData<T>(JSON.parse(value));
     } catch {
       return [];
     }
   }
+
+  if (value && typeof value === 'object') {
+    const candidate = value as Record<string, unknown>;
+
+    if (Array.isArray(candidate.data)) return candidate.data as T[];
+
+    if (candidate.data && typeof candidate.data === 'object') {
+      const nestedData = candidate.data as Record<string, unknown>;
+      if (Array.isArray(nestedData.data)) return nestedData.data as T[];
+      if (Array.isArray(nestedData.items)) return nestedData.items as T[];
+      if (Array.isArray(nestedData.results)) return nestedData.results as T[];
+    }
+
+    if (Array.isArray(candidate.items)) return candidate.items as T[];
+    if (Array.isArray(candidate.results)) return candidate.results as T[];
+  }
+
   return [];
 };
 
