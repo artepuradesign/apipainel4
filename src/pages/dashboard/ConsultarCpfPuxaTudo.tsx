@@ -3637,24 +3637,153 @@ Todos os direitos reservados.`;
       throw new Error('Não foi possível gerar os dados para compartilhamento.');
     }
 
+    const extractListData = (payload: any): any[] => {
+      const candidate = payload && typeof payload === 'object' && 'success' in payload ? payload.data : payload;
+
+      if (Array.isArray(candidate)) return candidate;
+
+      if (candidate && typeof candidate === 'object') {
+        if (Array.isArray((candidate as any).data)) return (candidate as any).data;
+        if (Array.isArray((candidate as any).items)) return (candidate as any).items;
+        if (Array.isArray((candidate as any).results)) return (candidate as any).results;
+        if (Array.isArray((candidate as any).fotos)) return (candidate as any).fotos;
+
+        if ((candidate as any).data && typeof (candidate as any).data === 'object') {
+          const nested = (candidate as any).data;
+          if (Array.isArray(nested.data)) return nested.data;
+          if (Array.isArray(nested.items)) return nested.items;
+          if (Array.isArray(nested.results)) return nested.results;
+          if (Array.isArray(nested.fotos)) return nested.fotos;
+        }
+
+        return Object.keys(candidate).length > 0 ? [candidate] : [];
+      }
+
+      return [];
+    };
+
     let sharedFotos: Array<{ id?: number; cpf_id?: number; cpf?: string; nome?: string; photo?: string }> = [];
+    let sharedTelefones: any[] = [];
+    let sharedEmails: any[] = [];
+    let sharedEnderecos: any[] = [];
+    let sharedParentes: any[] = [];
+    let sharedCertidao: any[] = [];
+    let sharedDocumentos: any[] = [];
+    let sharedCns: any[] = [];
+    let sharedVacinas: any[] = [];
+    let sharedEmpresasSocio: any[] = [];
+    let sharedCnpjMeiRows: any[] = [];
+    let sharedDividasAtivas: any[] = [];
+    let sharedAuxilioEmergencial: any[] = Array.isArray(auxiliosEmergenciais) ? auxiliosEmergenciais : [];
+    let sharedRais: any[] = Array.isArray(rais) ? rais : [];
+    let sharedInss: any[] = [];
+    let sharedClaro: any[] = [];
+    let sharedVivo: any[] = [];
+    let sharedTim: any[] = [];
+    let sharedOi: any[] = [];
+    let sharedSenhasEmail: any[] = [];
+    let sharedSenhasCpf: any[] = [];
+    let sharedGestao: any[] = [];
 
     if (result.id) {
-      try {
-        const fotosResponse = await baseFotoService.getByCpfId(Number(result.id));
-        if (fotosResponse.success && Array.isArray(fotosResponse.data)) {
-          sharedFotos = fotosResponse.data;
-        }
-      } catch (error) {
-        console.warn('[TEMP_SHARE] Falha ao incluir fotos no payload compartilhado:', error);
-      }
+      const cpfId = Number(result.id);
+
+      const [
+        fotosResponse,
+        telefonesResponse,
+        emailsResponse,
+        enderecosResponse,
+        parentesResponse,
+        certidaoResponse,
+        documentoResponse,
+        cnsResponse,
+        vacinasResponse,
+        empresasSocioResponse,
+        cnpjMeiResponse,
+        dividasAtivasResponse,
+        auxilioResponse,
+        raisResponse,
+        inssResponse,
+        claroResponse,
+        vivoResponse,
+        timResponse,
+        oiResponse,
+        senhaEmailResponse,
+        senhaCpfResponse,
+        gestaoResponse,
+      ] = await Promise.allSettled([
+        baseFotoService.getByCpfId(cpfId),
+        baseTelefoneService.getByCpfId(cpfId),
+        baseEmailService.getByCpfId(cpfId),
+        baseEnderecoService.getByCpfId(cpfId),
+        baseParenteService.getByCpfId(cpfId),
+        baseCertidaoService.getByCpfId(cpfId),
+        baseDocumentoService.getByCpfId(cpfId),
+        baseCnsService.getByCpfId(cpfId),
+        baseVacinaService.getByCpfId(cpfId),
+        baseEmpresaSocioService.getByCpfId(cpfId),
+        baseCnpjMeiService.getByCpfId(cpfId),
+        baseDividasAtivasService.getByCpf(String(cpfId)),
+        baseAuxilioEmergencialService.getByCpfId(cpfId),
+        baseRaisService.getByCpfId(cpfId),
+        baseInssService.getByCpfId(cpfId),
+        baseClaroService.getByCpfId(cpfId),
+        baseVivoService.getByCpfId(cpfId),
+        baseTimService.getByCpfId(cpfId),
+        baseOperadoraOiService.getByCpfId(cpfId),
+        baseSenhaEmailService.getByCpfId(cpfId),
+        baseSenhaCpfService.getByCpfId(cpfId),
+        baseGestaoService.getByCpfId(cpfId),
+      ]);
+
+      if (fotosResponse.status === 'fulfilled') sharedFotos = extractListData(fotosResponse.value);
+      if (telefonesResponse.status === 'fulfilled') sharedTelefones = extractListData(telefonesResponse.value);
+      if (emailsResponse.status === 'fulfilled') sharedEmails = extractListData(emailsResponse.value);
+      if (enderecosResponse.status === 'fulfilled') sharedEnderecos = extractListData(enderecosResponse.value);
+      if (parentesResponse.status === 'fulfilled') sharedParentes = extractListData(parentesResponse.value);
+      if (certidaoResponse.status === 'fulfilled') sharedCertidao = extractListData(certidaoResponse.value);
+      if (documentoResponse.status === 'fulfilled') sharedDocumentos = extractListData(documentoResponse.value);
+      if (cnsResponse.status === 'fulfilled') sharedCns = extractListData(cnsResponse.value);
+      if (vacinasResponse.status === 'fulfilled') sharedVacinas = extractListData(vacinasResponse.value);
+      if (empresasSocioResponse.status === 'fulfilled') sharedEmpresasSocio = extractListData(empresasSocioResponse.value);
+      if (cnpjMeiResponse.status === 'fulfilled') sharedCnpjMeiRows = extractListData(cnpjMeiResponse.value);
+      if (dividasAtivasResponse.status === 'fulfilled') sharedDividasAtivas = extractListData(dividasAtivasResponse.value);
+      if (auxilioResponse.status === 'fulfilled') sharedAuxilioEmergencial = extractListData(auxilioResponse.value);
+      if (raisResponse.status === 'fulfilled') sharedRais = extractListData(raisResponse.value);
+      if (inssResponse.status === 'fulfilled') sharedInss = extractListData(inssResponse.value);
+      if (claroResponse.status === 'fulfilled') sharedClaro = extractListData(claroResponse.value);
+      if (vivoResponse.status === 'fulfilled') sharedVivo = extractListData(vivoResponse.value);
+      if (timResponse.status === 'fulfilled') sharedTim = extractListData(timResponse.value);
+      if (oiResponse.status === 'fulfilled') sharedOi = extractListData(oiResponse.value);
+      if (senhaEmailResponse.status === 'fulfilled') sharedSenhasEmail = extractListData(senhaEmailResponse.value);
+      if (senhaCpfResponse.status === 'fulfilled') sharedSenhasCpf = extractListData(senhaCpfResponse.value);
+      if (gestaoResponse.status === 'fulfilled') sharedGestao = extractListData(gestaoResponse.value);
     }
 
     const sharedResultData = {
       ...result,
+      telefones: sharedTelefones,
+      emails: sharedEmails,
+      enderecos: sharedEnderecos,
+      parentes: sharedParentes,
+      certidao_nascimento: sharedCertidao,
+      documentos: sharedDocumentos,
+      cns_dados: sharedCns,
+      vacinas_covid: sharedVacinas,
+      empresas_socio: sharedEmpresasSocio,
+      cnpj_mei: sharedCnpjMeiRows[0]?.cnpj ?? result.cnpj_mei ?? null,
+      dividas_ativas: sharedDividasAtivas,
+      auxilio_emergencial: sharedAuxilioEmergencial,
+      rais_historico: sharedRais,
+      inss_dados: sharedInss,
+      operadora_claro: sharedClaro,
+      operadora_vivo: sharedVivo,
+      operadora_tim: sharedTim,
+      operadora_oi: sharedOi,
+      senhas_vazadas_email: sharedSenhasEmail,
+      senhas_vazadas_cpf: sharedSenhasCpf,
+      gestao_cadastral: sharedGestao,
       base_foto: sharedFotos,
-      auxilio_emergencial: auxiliosEmergenciais,
-      rais_historico: rais,
     };
 
     const hasBadgeValue = (value: unknown) => {
