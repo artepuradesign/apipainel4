@@ -100,6 +100,19 @@ const formatFieldLabel = (key: string) =>
     .trim()
     .replace(/^./, (char) => char.toUpperCase());
 
+const formatCpfValue = (value: unknown) => {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  if (digits.length !== 11) return String(value ?? '');
+  return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+};
+
+const formatLocalPhone = (value: unknown) => {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  if (digits.length === 8) return digits.replace(/(\d{4})(\d{4})/, '$1-$2');
+  if (digits.length === 9) return digits.replace(/(\d{5})(\d{4})/, '$1-$2');
+  return String(value ?? '');
+};
+
 const normalizePhotoUrl = (value: string) => {
   const raw = value.trim();
   if (!raw) return '';
@@ -114,39 +127,86 @@ const normalizePhotoUrl = (value: string) => {
   return `https://api.apipainel.com.br/fotos/${normalized}`;
 };
 
-interface SharedCollectionSectionProps {
-  id: string;
-  title: string;
-  items: SharedRecord[];
+interface SharedFieldConfig {
+  label: string;
+  keys: string[];
+  formatter?: (value: unknown) => string;
 }
 
-const SharedCollectionSection: React.FC<SharedCollectionSectionProps> = ({ id, title, items }) => {
+const getFirstRecordValue = (item: SharedRecord, keys: string[]) => {
+  for (const key of keys) {
+    const value = item[key];
+    if (hasValue(value)) return value;
+  }
+  return '';
+};
+
+const formatInputValue = (value: unknown, formatter?: (value: unknown) => string) => {
+  if (!hasValue(value)) return '';
+  if (formatter) return formatter(value);
+  return String(value);
+};
+
+interface SharedInputRecordsSectionProps {
+  id: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: SharedRecord[];
+  fields?: SharedFieldConfig[];
+}
+
+const SharedInputRecordsSection: React.FC<SharedInputRecordsSectionProps> = ({ id, title, icon: Icon, items, fields }) => {
   if (items.length === 0) return null;
 
   return (
     <Card id={id} className="border-success-border bg-success-subtle">
       <CardHeader className="p-4 md:p-6">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-base sm:text-lg lg:text-xl">{title}</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl min-w-0">
+            <Icon className="h-5 w-5 flex-shrink-0" />
+            <span className="truncate">{title}</span>
+          </CardTitle>
           <div className="relative inline-flex">
             <Badge variant="secondary" className="uppercase tracking-wide">Online</Badge>
-            <span className="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground ring-1 ring-background">
+            <span className="absolute -top-2 -right-2 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground ring-1 ring-background">
               {items.length}
             </span>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 p-4 md:p-6">
+      <CardContent className="space-y-4 p-4 md:p-6">
         {items.map((item, index) => {
-          const fields = Object.entries(item).filter(([, value]) => hasValue(value));
+          const resolvedFields =
+            fields?.map((field) => ({
+              key: field.keys.join('-'),
+              label: field.label,
+              value: formatInputValue(getFirstRecordValue(item, field.keys), field.formatter),
+            })).filter((field) => hasValue(field.value)) ??
+            Object.entries(item)
+              .filter(([, value]) => hasValue(value))
+              .map(([key, value]) => ({
+                key,
+                label: formatFieldLabel(key),
+                value: formatInputValue(value),
+              }));
+
+          if (resolvedFields.length === 0) return null;
+
           return (
-            <div key={`${id}-${index}`} className="rounded-md border bg-card p-3 md:p-4">
-              <p className="text-sm font-semibold mb-2">Registro {index + 1}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                {fields.map(([key, value]) => (
-                  <div key={`${id}-${index}-${key}`} className="min-w-0">
-                    <span className="text-muted-foreground">{formatFieldLabel(key)}:</span>{' '}
-                    <span className="break-words">{String(value)}</span>
+            <div key={`${id}-${index}`} className="rounded-lg border border-border bg-muted/20 p-4 space-y-4">
+              <Badge variant="outline">Registro {index + 1}</Badge>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {resolvedFields.map((field, fieldIndex) => (
+                  <div key={`${id}-${index}-${field.key}-${fieldIndex}`}>
+                    <Label className="text-xs sm:text-sm" htmlFor={`${id}-${index}-${field.key}-${fieldIndex}`}>
+                      {field.label}
+                    </Label>
+                    <Input
+                      id={`${id}-${index}-${field.key}-${fieldIndex}`}
+                      value={field.value}
+                      disabled
+                      className="bg-muted text-[14px] md:text-sm"
+                    />
                   </div>
                 ))}
               </div>
