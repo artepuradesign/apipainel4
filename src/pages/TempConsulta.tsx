@@ -323,6 +323,7 @@ const TempConsulta = () => {
   );
 
   const cnpjMeiValue = sharedResult?.cnpj_mei;
+  const isMobile = useIsMobile();
 
   const photoUrls = useMemo(() => {
     const fromSingles = [sharedResult?.foto, sharedResult?.foto2].filter((value): value is string => typeof value === 'string' && value.trim() !== '');
@@ -332,6 +333,12 @@ const TempConsulta = () => {
 
     return [...new Set([...fromSingles, ...fromArray].map(normalizePhotoUrl).filter(Boolean))];
   }, [sharedResult?.foto, sharedResult?.foto2, sharedResult?.fotos, sharedResult?.base_foto]);
+
+  const photoSlotsToRender = useMemo(() => {
+    const desktopSlots = 4;
+    const mobileSlots = photoUrls.length > 2 ? 4 : 2;
+    return isMobile ? mobileSlots : desktopSlots;
+  }, [isMobile, photoUrls.length]);
 
   const badgeCounts = useMemo(() => {
     const fallback = (href: string, current: number) => {
