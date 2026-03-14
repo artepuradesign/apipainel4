@@ -18,9 +18,10 @@ const normalizeText = (value: unknown): string => {
 interface PisSectionProps {
   pis?: string | null;
   onEdit?: () => void;
+  enableCopy?: boolean;
 }
 
-const PisSection: React.FC<PisSectionProps> = ({ pis, onEdit }) => {
+const PisSection: React.FC<PisSectionProps> = ({ pis, onEdit, enableCopy = true }) => {
   const pisValue = normalizeText(pis);
   const hasData = useMemo(() => !!pisValue, [pisValue]);
   const sectionCardClass = hasData ? 'border-success-border bg-success-subtle' : '';
@@ -57,7 +58,7 @@ const PisSection: React.FC<PisSectionProps> = ({ pis, onEdit }) => {
               </Button>
             )}
 
-            {hasData && (
+            {hasData && enableCopy && (
               <Button
                 variant="ghost"
                 size="icon"

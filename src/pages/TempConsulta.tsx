@@ -17,6 +17,7 @@ import ScoreGaugeCard from '@/components/dashboard/ScoreGaugeCard';
 import PisSection from '@/components/dashboard/PisSection';
 import { AuxilioEmergencialSection } from '@/components/dashboard/AuxilioEmergencialSection';
 import { RaisSection } from '@/components/dashboard/RaisSection';
+import ScrollToTop from '@/components/ui/scroll-to-top';
 import { useIsMobile } from '@/hooks/use-mobile';
 import placeholderImage from '@/assets/placeholder-photo.png';
 
@@ -1100,7 +1101,7 @@ const TempConsulta = () => {
 
                   {hasValue(sharedResult?.pis) && (
                     <div id="pis-section">
-                      <PisSection pis={sharedResult.pis} />
+                      <PisSection pis={sharedResult.pis} enableCopy={false} />
                     </div>
                   )}
 
@@ -1161,6 +1162,7 @@ const TempConsulta = () => {
         </section>
       </main>
 
+      <ScrollToTop />
       <FuturisticFooter />
     </PageLayout>
   );
