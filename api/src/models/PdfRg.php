@@ -2,11 +2,12 @@
 require_once __DIR__ . '/BaseModel.php';
 require_once __DIR__ . '/../utils/FileUpload.php';
 require_once __DIR__ . '/../services/WalletService.php';
+require_once __DIR__ . '/../services/NotificationService.php';
 
 class PdfRg extends BaseModel {
     protected $table = 'pdf_rg_pedidos';
 
-    private $validStatuses = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
+    private $validStatuses = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue', 'cancelado'];
 
     public function __construct($db) {
         parent::__construct($db);
