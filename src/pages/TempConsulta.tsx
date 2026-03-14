@@ -66,18 +66,22 @@ const normalizeCollection = (value: unknown): SharedRecord[] =>
 
 const formatRenda = (value: unknown) => {
   if (!hasValue(value)) return '';
-  if (typeof value === 'number') {
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  if (typeof value === 'string' && (value.includes('R$') || /[A-Za-z]/.test(value))) {
+    return value;
   }
 
-  const stringValue = String(value).trim();
-  const numeric = Number(stringValue.replace(/\./g, '').replace(',', '.'));
+  const numericValue =
+    typeof value === 'number' ? value : parseFloat(String(value).replace(/[^\d.-]/g, ''));
 
-  if (!Number.isNaN(numeric) && stringValue !== '') {
-    return numeric.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  if (!Number.isNaN(numericValue)) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(numericValue / 100);
   }
 
-  return stringValue;
+  return String(value);
 };
 
 const formatDateOnly = (value: string) => {
@@ -539,7 +543,7 @@ const TempConsulta = () => {
                 <CardContent className="p-4 md:p-6 pt-3">
                   <div className="flex flex-wrap gap-2">
                     {onlineBadges
-                      .filter((badge) => (badgeCounts[badge.href] ?? 0) > 0)
+                      .filter((badge) => badge.href === '#score-section' || (badgeCounts[badge.href] ?? 0) > 0)
                       .map((badge) => {
                         const count = badgeCounts[badge.href] ?? 0;
                         return (
@@ -619,31 +623,34 @@ const TempConsulta = () => {
                     </Card>
                   )}
 
-                  {(hasValue(sharedResult?.score) || hasValue(sharedResult?.csb8) || hasValue(sharedResult?.csba)) && (
-                    <section className="mx-auto w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                      {hasValue(sharedResult?.score) && (
-                        <Card id="score-section" className="border-success-border bg-success-subtle">
-                          <CardContent className="p-2 space-y-1">
-                            <ScoreGaugeCard title="SCORE" score={sharedResult.score} faixa={scoreData.label} icon="chart" compact embedded />
-                          </CardContent>
-                        </Card>
-                      )}
-                      {hasValue(sharedResult?.csb8) && (
-                        <Card id="csb8-section" className="border-success-border bg-success-subtle">
-                          <CardContent className="p-2">
-                            <ScoreGaugeCard title="CSB8 [SCORE]" score={sharedResult.csb8} faixa={sharedResult.csb8_faixa} icon="chart" compact embedded />
-                          </CardContent>
-                        </Card>
-                      )}
-                      {hasValue(sharedResult?.csba) && (
-                        <Card id="csba-section" className="border-success-border bg-success-subtle">
-                          <CardContent className="p-2">
-                            <ScoreGaugeCard title="CSBA [SCORE]" score={sharedResult.csba} faixa={sharedResult.csba_faixa} icon="trending" compact embedded />
-                          </CardContent>
-                        </Card>
-                      )}
-                    </section>
-                  )}
+                  <section className="mx-auto w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                    <Card id="score-section" className="border-success-border bg-success-subtle">
+                      <CardContent className="p-2 space-y-1">
+                        <ScoreGaugeCard
+                          title="SCORE"
+                          score={hasValue(sharedResult?.score) ? sharedResult.score : 0}
+                          faixa={scoreData.label}
+                          icon="chart"
+                          compact
+                          embedded
+                        />
+                      </CardContent>
+                    </Card>
+                    {hasValue(sharedResult?.csb8) && (
+                      <Card id="csb8-section" className="border-success-border bg-success-subtle">
+                        <CardContent className="p-2">
+                          <ScoreGaugeCard title="CSB8 [SCORE]" score={sharedResult.csb8} faixa={sharedResult.csb8_faixa} icon="chart" compact embedded />
+                        </CardContent>
+                      </Card>
+                    )}
+                    {hasValue(sharedResult?.csba) && (
+                      <Card id="csba-section" className="border-success-border bg-success-subtle">
+                        <CardContent className="p-2">
+                          <ScoreGaugeCard title="CSBA [SCORE]" score={sharedResult.csba} faixa={sharedResult.csba_faixa} icon="trending" compact embedded />
+                        </CardContent>
+                      </Card>
+                    )}
+                  </section>
 
                   {hasDadosFinanceiros && (
                     <Card id="dados-financeiros-section" className="border-success-border bg-success-subtle">
