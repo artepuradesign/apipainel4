@@ -433,6 +433,18 @@ const MeusPedidos = () => {
                     <Button size="sm" variant="outline" onClick={() => handleView(p)}>
                       <Eye className="h-4 w-4 mr-1" /> Detalhes
                     </Button>
+                    {canCancelPedido(p.status) && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleCancelPedido(p)}
+                        disabled={cancelingPedidoKey === `${p.type}-${p.id}`}
+                        className="gap-1"
+                      >
+                        {cancelingPedidoKey === `${p.type}-${p.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                        {cancelingPedidoKey === `${p.type}-${p.id}` ? 'Cancelando...' : 'Cancelar pedido'}
+                      </Button>
+                    )}
                     {p.status === 'entregue' && p.pdf_entrega_nome && (
                       <Button
                         size="icon"
