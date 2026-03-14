@@ -119,6 +119,7 @@ import BaseReceitaAdmin from '@/pages/dashboard/admin/BaseReceitaAdmin';
 
 import PainelIndividual from '@/pages/dashboard/PainelIndividual';
 import DashboardAdmin from '@/pages/dashboard/DashboardAdmin';
+import DashboardAdmin2 from '@/pages/dashboard/DashboardAdmin2';
 import AdminCaixa from '@/pages/dashboard/admin/AdminCaixa';
 import AdminCompraPlanos from '@/pages/dashboard/admin/AdminCompraPlanos';
 import AdminRecargas from '@/pages/dashboard/admin/AdminRecargas';
