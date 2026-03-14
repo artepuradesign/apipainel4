@@ -12,13 +12,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import DashboardTitleCard from '@/components/dashboard/DashboardTitleCard';
 import { useNavigate } from 'react-router-dom';
 
-const STATUS_ORDER: PdfRgStatus[] = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
+type ActivePedidoStatus = Exclude<PdfRgStatus, 'cancelado'>;
+
+const STATUS_ORDER: ActivePedidoStatus[] = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
 
 const statusLabels: Record<PdfRgStatus, string> = {
   realizado: 'Pedido Realizado',
   pagamento_confirmado: 'Pagamento Confirmado',
   em_confeccao: 'Em Confecção',
   entregue: 'Entregue',
+  cancelado: 'Cancelado',
 };
 
 const statusIcons: Record<PdfRgStatus, React.ReactNode> = {
@@ -26,6 +29,7 @@ const statusIcons: Record<PdfRgStatus, React.ReactNode> = {
   pagamento_confirmado: <DollarSign className="h-5 w-5" />,
   em_confeccao: <Hammer className="h-5 w-5" />,
   entregue: <CheckCircle className="h-5 w-5" />,
+  cancelado: <Ban className="h-5 w-5" />,
 };
 
 const statusBadgeColors: Record<PdfRgStatus, string> = {
@@ -33,6 +37,7 @@ const statusBadgeColors: Record<PdfRgStatus, string> = {
   pagamento_confirmado: 'bg-emerald-500 text-white',
   em_confeccao: 'bg-blue-500 text-white',
   entregue: 'bg-emerald-500 text-white',
+  cancelado: 'bg-destructive text-destructive-foreground',
 };
 
 const formatDateBR = (dateStr: string | null) => {
