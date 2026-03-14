@@ -152,6 +152,7 @@ const MeusPedidos = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPedido, setSelectedPedido] = useState<UnifiedPedido | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [cancelingPedidoKey, setCancelingPedidoKey] = useState<string | null>(null);
 
   const loadPedidos = useCallback(async () => {
     if (!user?.id) return;
