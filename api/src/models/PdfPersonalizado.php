@@ -246,11 +246,12 @@ class PdfPersonalizado extends BaseModel {
     public function deletarPedido($id, $actorRole = null, $actorUserId = null) {
         $id = (int)$id;
         $walletService = new WalletService($this->db);
+        $notificationService = new NotificationService($this->db);
 
         try {
             $this->db->beginTransaction();
 
-            $stmt = $this->db->prepare("SELECT user_id, preco_pago, status, anexo1_nome, anexo2_nome, anexo3_nome, pdf_entrega_nome FROM {$this->table} WHERE id = ? LIMIT 1");
+            $stmt = $this->db->prepare("SELECT user_id, preco_pago, status FROM {$this->table} WHERE id = ? LIMIT 1");
             $stmt->execute([$id]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -258,23 +259,34 @@ class PdfPersonalizado extends BaseModel {
                 throw new Exception('Pedido não encontrado');
             }
 
-            $canRefund = in_array($actorRole, ['admin', 'suporte'], true)
-                && !empty($row['user_id'])
-                && (float)$row['preco_pago'] > 0
+            if (($row['status'] ?? null) === 'cancelado') {
+                $this->db->commit();
+                return true;
+            }
+
+            $isAdminOrSupport = in_array($actorRole, ['admin', 'suporte'], true);
+            $targetUserId = !empty($row['user_id']) ? (int)$row['user_id'] : null;
+            $pricePaid = (float)($row['preco_pago'] ?? 0);
+
+            $canRefund = $isAdminOrSupport
+                && $targetUserId
+                && $pricePaid > 0
                 && ($row['status'] ?? null) !== 'entregue';
+
+            $refundApplied = false;
 
             if ($canRefund) {
                 $refundReferenceType = 'pedido_cancelado_pdf_personalizado';
                 $checkRefundStmt = $this->db->prepare("SELECT id FROM wallet_transactions WHERE user_id = ? AND reference_type = ? AND reference_id = ? LIMIT 1");
-                $checkRefundStmt->execute([(int)$row['user_id'], $refundReferenceType, $id]);
+                $checkRefundStmt->execute([$targetUserId, $refundReferenceType, $id]);
                 $existingRefund = $checkRefundStmt->fetch(PDO::FETCH_ASSOC);
 
                 if (!$existingRefund) {
                     $refundDescription = "Extorno cancelamento admin PDF Personalizado #{$id}";
                     $refundResult = $walletService->createTransaction(
-                        (int)$row['user_id'],
+                        $targetUserId,
                         'entrada',
-                        (float)$row['preco_pago'],
+                        $pricePaid,
                         $refundDescription,
                         $refundReferenceType,
                         $id,
@@ -284,28 +296,45 @@ class PdfPersonalizado extends BaseModel {
                     if (!$refundResult['success']) {
                         throw new Exception($refundResult['message'] ?? 'Falha ao estornar saldo do plano');
                     }
+
+                    $refundApplied = true;
                 }
             }
 
-            $deleteStmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id = ?");
-            $deleted = $deleteStmt->execute([$id]);
+            $now = date('Y-m-d H:i:s');
+            $cancelStmt = $this->db->prepare("UPDATE {$this->table} SET status = 'cancelado', updated_at = ? WHERE id = ?");
+            $updated = $cancelStmt->execute([$now, $id]);
 
-            if (!$deleted) {
-                throw new Exception('Falha ao excluir pedido');
+            if (!$updated) {
+                throw new Exception('Falha ao cancelar pedido');
+            }
+
+            if ($isAdminOrSupport && $targetUserId) {
+                $notificationService->createNotification(
+                    $targetUserId,
+                    'pedido_cancelado',
+                    "Pedido PDF Personalizado #{$id} cancelado",
+                    'Seu pedido foi cancelado pelo administrador.',
+                    '/dashboard/meus-pedidos',
+                    'Ver pedidos',
+                    'high'
+                );
+
+                if ($refundApplied) {
+                    $formattedValue = 'R$ ' . number_format($pricePaid, 2, ',', '.');
+                    $notificationService->createNotification(
+                        $targetUserId,
+                        'pedido_extorno',
+                        "Extorno recebido - Pedido PDF Personalizado #{$id}",
+                        "O valor {$formattedValue} voltou para o saldo do seu plano.",
+                        '/dashboard/meus-pedidos',
+                        'Ver pedidos',
+                        'high'
+                    );
+                }
             }
 
             $this->db->commit();
-
-            foreach (['anexo1_nome', 'anexo2_nome', 'anexo3_nome', 'pdf_entrega_nome'] as $field) {
-                if (!empty($row[$field])) {
-                    if ($field === 'pdf_entrega_nome') {
-                        FileUpload::deleteDeliveryFile($row[$field]);
-                    } else {
-                        FileUpload::deleteFile($row[$field]);
-                    }
-                }
-            }
-
             return true;
         } catch (Exception $e) {
             if ($this->db->inTransaction()) {
