@@ -9,6 +9,7 @@ export interface NomeConsultaResultado {
   enderecos: string;
   cidades: string;
   nome_mae?: string;
+  [key: string]: string | undefined;
 }
 
 export interface NomeConsultaResponse {

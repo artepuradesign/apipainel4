@@ -483,6 +483,31 @@ const ConsultarNomeCompleto = () => {
     }
   };
 
+  const formatFieldLabel = (field: string) => {
+    return field
+      .replace(/_/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const getExtraFields = (resultado: NomeConsultaResultado) => {
+    const hiddenFields = new Set(['nome', 'cpf', 'nascimento']);
+
+    return Object.entries(resultado)
+      .filter(([key, value]) => {
+        if (hiddenFields.has(key)) return false;
+        if (typeof value !== 'string') return false;
+        const normalized = value.trim().toLowerCase();
+        return normalized !== '' && normalized !== '-' && normalized !== 'null' && normalized !== 'undefined';
+      })
+      .map(([key, value]) => ({
+        key,
+        label: formatFieldLabel(key),
+        value: (value as string).trim(),
+      }));
+  };
+
   const copyResultsToClipboard = () => {
     if (resultados.length === 0) return;
 
@@ -496,12 +521,18 @@ const ConsultarNomeCompleto = () => {
 
 `;
 
-    const body = resultados.map((r, index) => 
-      `[${index + 1}] Nome: ${r.nome || '-'}
+    const body = resultados
+      .map((r, index) => {
+        const extraFields = getExtraFields(r)
+          .map((field) => `    ${field.label}: ${field.value}`)
+          .join('\n');
+
+        return `[${index + 1}] Nome: ${r.nome || '-'}
     CPF: ${r.cpf || '-'}
-    Nascimento: ${r.nascimento || '-'}
-    ──────────────────────────────────────`
-    ).join('\n');
+    Nascimento: ${r.nascimento || '-'}${extraFields ? `\n${extraFields}` : ''}
+    ──────────────────────────────────────`;
+      })
+      .join('\n');
 
     const footer = `
 
@@ -514,7 +545,7 @@ const ConsultarNomeCompleto = () => {
 ══════════════════════════════════════════`;
 
     navigator.clipboard.writeText(header + body + footer);
-    toast.success('Resultados copiados com cabeçalho e rodapé!');
+    toast.success('Resultados copiados com todos os dados disponíveis!');
   };
 
   const formatFullDate = (dateString: string) => {
@@ -770,26 +801,41 @@ const ConsultarNomeCompleto = () => {
             {/* Mobile: Cards */}
             {isMobile ? (
               <div className="space-y-3">
-                {resultados.map((resultado, index) => (
-                  <div key={index} className="p-3 bg-muted/50 rounded-lg border">
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-xs text-muted-foreground">Nome</span>
-                        <p className="font-medium text-sm">{resultado.nome || '—'}</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
+                {resultados.map((resultado, index) => {
+                  const extraFields = getExtraFields(resultado);
+
+                  return (
+                    <div key={index} className="p-3 bg-muted/50 rounded-lg border">
+                      <div className="space-y-2">
                         <div>
-                          <span className="text-xs text-muted-foreground">CPF</span>
-                          <p className="font-mono text-sm">{resultado.cpf || '—'}</p>
+                          <span className="text-xs text-muted-foreground">Nome</span>
+                          <p className="font-medium text-sm">{resultado.nome || '—'}</p>
                         </div>
-                        <div>
-                          <span className="text-xs text-muted-foreground">Nascimento</span>
-                          <p className="text-sm">{resultado.nascimento || '—'}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-xs text-muted-foreground">CPF</span>
+                            <p className="font-mono text-sm">{resultado.cpf || '—'}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground">Nascimento</span>
+                            <p className="text-sm">{resultado.nascimento || '—'}</p>
+                          </div>
                         </div>
+
+                        {extraFields.length > 0 && (
+                          <div className="pt-2 border-t border-border space-y-1">
+                            {extraFields.map((field) => (
+                              <div key={field.key} className="text-xs">
+                                <span className="text-muted-foreground">{field.label}: </span>
+                                <span className="text-foreground break-words">{field.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               /* Desktop: Table */
@@ -799,17 +845,36 @@ const ConsultarNomeCompleto = () => {
                     <TableRow>
                       <TableHead className="min-w-[200px]">Nome</TableHead>
                       <TableHead className="min-w-[130px]">CPF</TableHead>
-                      <TableHead className="min-w-[100px]">Nascimento</TableHead>
+                      <TableHead className="min-w-[110px]">Nascimento</TableHead>
+                      <TableHead className="min-w-[320px]">Demais Dados</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {resultados.map((resultado, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{resultado.nome || '—'}</TableCell>
-                        <TableCell className="font-mono text-sm">{resultado.cpf || '—'}</TableCell>
-                        <TableCell>{resultado.nascimento || '—'}</TableCell>
-                      </TableRow>
-                    ))}
+                    {resultados.map((resultado, index) => {
+                      const extraFields = getExtraFields(resultado);
+
+                      return (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{resultado.nome || '—'}</TableCell>
+                          <TableCell className="font-mono text-sm">{resultado.cpf || '—'}</TableCell>
+                          <TableCell>{resultado.nascimento || '—'}</TableCell>
+                          <TableCell>
+                            {extraFields.length > 0 ? (
+                              <div className="space-y-1">
+                                {extraFields.map((field) => (
+                                  <div key={field.key} className="text-xs leading-relaxed">
+                                    <span className="text-muted-foreground">{field.label}: </span>
+                                    <span className="text-foreground">{field.value}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
