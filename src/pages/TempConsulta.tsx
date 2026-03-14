@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, Camera, CheckCircle, Clock3, DollarSign, FileText, User } from 'lucide-react';
+import { AlertCircle, Camera, CheckCircle, Clock3, DollarSign, FileSignature, FileText, Mail, MapPin, Phone, User, Users } from 'lucide-react';
 import { tempConsultationShareService } from '@/services/tempConsultationShareService';
 import type { BaseAuxilioEmergencial } from '@/services/baseAuxilioEmergencialService';
 import type { BaseRais } from '@/services/baseRaisService';
