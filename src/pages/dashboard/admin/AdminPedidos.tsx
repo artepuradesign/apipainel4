@@ -735,6 +735,7 @@ const AdminPedidos = () => {
             <SelectItem value="pagamento_confirmado">Pagamento Confirmado</SelectItem>
             <SelectItem value="em_confeccao">Em Confecção</SelectItem>
             <SelectItem value="entregue">Entregue</SelectItem>
+            <SelectItem value="cancelado">Cancelado</SelectItem>
           </SelectContent>
         </Select>
         <Button variant="outline" size="icon" onClick={loadPedidos}>
