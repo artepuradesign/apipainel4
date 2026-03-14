@@ -801,26 +801,41 @@ const ConsultarNomeCompleto = () => {
             {/* Mobile: Cards */}
             {isMobile ? (
               <div className="space-y-3">
-                {resultados.map((resultado, index) => (
-                  <div key={index} className="p-3 bg-muted/50 rounded-lg border">
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-xs text-muted-foreground">Nome</span>
-                        <p className="font-medium text-sm">{resultado.nome || '—'}</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
+                {resultados.map((resultado, index) => {
+                  const extraFields = getExtraFields(resultado);
+
+                  return (
+                    <div key={index} className="p-3 bg-muted/50 rounded-lg border">
+                      <div className="space-y-2">
                         <div>
-                          <span className="text-xs text-muted-foreground">CPF</span>
-                          <p className="font-mono text-sm">{resultado.cpf || '—'}</p>
+                          <span className="text-xs text-muted-foreground">Nome</span>
+                          <p className="font-medium text-sm">{resultado.nome || '—'}</p>
                         </div>
-                        <div>
-                          <span className="text-xs text-muted-foreground">Nascimento</span>
-                          <p className="text-sm">{resultado.nascimento || '—'}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-xs text-muted-foreground">CPF</span>
+                            <p className="font-mono text-sm">{resultado.cpf || '—'}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground">Nascimento</span>
+                            <p className="text-sm">{resultado.nascimento || '—'}</p>
+                          </div>
                         </div>
+
+                        {extraFields.length > 0 && (
+                          <div className="pt-2 border-t border-border space-y-1">
+                            {extraFields.map((field) => (
+                              <div key={field.key} className="text-xs">
+                                <span className="text-muted-foreground">{field.label}: </span>
+                                <span className="text-foreground break-words">{field.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               /* Desktop: Table */
