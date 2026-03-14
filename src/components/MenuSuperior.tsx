@@ -35,11 +35,6 @@ const MenuSuperior = () => {
   // Verificar páginas atuais para exibir links contextuais
   const isDashboardPage = location.pathname.startsWith('/dashboard');
   const isHomePage = location.pathname === '/';
-  const isAdminV1Page = location.pathname === '/dashboard/admin';
-  const isAdminV2Page = location.pathname === '/dashboard/admin2';
-  const shouldShowAdminVersionSwitch = isSupport && (isAdminV1Page || isAdminV2Page);
-  const adminVersionTarget = isAdminV1Page ? '/dashboard/admin2' : '/dashboard/admin';
-  const adminVersionLabel = isAdminV1Page ? 'Versão 2.0' : 'Versão 1.0';
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -135,17 +130,6 @@ const MenuSuperior = () => {
                       <p>Notificações</p>
                     </TooltipContent>
                   </Tooltip>
-                )}
-                {shouldShowAdminVersionSwitch && (
-                  <Link to={adminVersionTarget}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={cn(liquidGlassConfig.enabled && "hover:bg-white/10")}
-                    >
-                      {adminVersionLabel}
-                    </Button>
-                  </Link>
                 )}
               </div>
             </div>
