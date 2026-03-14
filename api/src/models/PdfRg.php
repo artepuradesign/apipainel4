@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/BaseModel.php';
 require_once __DIR__ . '/../utils/FileUpload.php';
+require_once __DIR__ . '/../services/WalletService.php';
 
 class PdfRg extends BaseModel {
     protected $table = 'pdf_rg_pedidos';
