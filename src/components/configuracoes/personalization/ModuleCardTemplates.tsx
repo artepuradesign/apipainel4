@@ -252,7 +252,7 @@ const ModuleCardTemplates = ({ module, template, theme, isDarkMode: isDarkModePr
  // Aumentada altura para melhor espaçamento
  const cardSizeClass = "w-[150px] h-[190px]";
   const contentPaddingClass = "p-3";
-  const titleClass = "text-sm";
+  const titleClass = "text-sm leading-5 line-clamp-2 min-h-[2.5rem] !whitespace-normal !text-clip";
   const descriptionClass = "text-xs";
   const priceClass = "text-sm";
   const originalPriceClass = "text-xs";
