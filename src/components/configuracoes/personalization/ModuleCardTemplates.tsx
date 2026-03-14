@@ -249,7 +249,7 @@ const ModuleCardTemplates = ({ module, template, theme, isDarkMode: isDarkModePr
   const styles = getTemplateStyles();
 
   // Ajustes de legibilidade (mesmo tamanho no mobile e no desktop)
-  const cardSizeClass = "w-[150px] h-[205px]";
+  const cardSizeClass = "w-[150px] h-[195px]";
   const contentPaddingClass = "p-3";
   const titleClass = "text-sm leading-5 line-clamp-1 min-h-[1.25rem] !whitespace-normal !text-clip";
   const descriptionClass = "text-xs";
