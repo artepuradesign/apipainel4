@@ -1101,7 +1101,7 @@ const TempConsulta = () => {
 
                   {hasValue(sharedResult?.pis) && (
                     <div id="pis-section">
-                      <PisSection pis={sharedResult.pis} />
+                      <PisSection pis={sharedResult.pis} enableCopy={false} />
                     </div>
                   )}
 
