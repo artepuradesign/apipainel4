@@ -543,7 +543,7 @@ const TempConsulta = () => {
                 <CardContent className="p-4 md:p-6 pt-3">
                   <div className="flex flex-wrap gap-2">
                     {onlineBadges
-                      .filter((badge) => (badgeCounts[badge.href] ?? 0) > 0)
+                      .filter((badge) => badge.href === '#score-section' || (badgeCounts[badge.href] ?? 0) > 0)
                       .map((badge) => {
                         const count = badgeCounts[badge.href] ?? 0;
                         return (
