@@ -894,17 +894,34 @@ const AdminPedidos = () => {
 
               {/* Status Update */}
               <div className="space-y-3">
-                <p className="text-sm font-medium">Atualizar Status:</p>
-                <p className="text-xs text-muted-foreground">Clique em uma etapa para atualizar o status do pedido.</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">Atualizar Status:</p>
+                    <p className="text-xs text-muted-foreground">Clique em uma etapa para atualizar o status do pedido.</p>
+                  </div>
+                  {canCancelPedido(selectedPedido.status) && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleCancelPedido(selectedPedido)}
+                      disabled={updatingStatus || cancelingPedido}
+                      className="gap-1"
+                    >
+                      {cancelingPedido ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                      {cancelingPedido ? 'Cancelando...' : 'Cancelar pedido'}
+                    </Button>
+                  )}
+                </div>
+
                 <StatusProgressCircles
                   pedido={selectedPedido}
                   onClickStep={handleUpdateStatus}
-                  disabled={updatingStatus}
+                  disabled={updatingStatus || cancelingPedido}
                 />
 
-                {updatingStatus && (
+                {(updatingStatus || cancelingPedido) && (
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Atualizando...
+                    <Loader2 className="h-4 w-4 animate-spin" /> {cancelingPedido ? 'Cancelando...' : 'Atualizando...'}
                   </div>
                 )}
               </div>
