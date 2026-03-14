@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { getFullApiUrl } from '@/utils/apiHelper';
 import { pdfRgService, PdfRgPedido, PdfRgStatus } from '@/services/pdfRgService';
 import { editarPdfService, EditarPdfPedido, EditarPdfStatus } from '@/services/pdfPersonalizadoService';
-import { Eye, Download, Loader2, Package, DollarSign, Hammer, CheckCircle, ClipboardList, Upload, FileDown, FileText } from 'lucide-react';
+import { Eye, Download, Loader2, Package, DollarSign, Hammer, CheckCircle, ClipboardList, Upload, FileDown, FileText, Ban } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardTitleCard from '@/components/dashboard/DashboardTitleCard';
 import { useNavigate } from 'react-router-dom';
@@ -152,6 +152,7 @@ const MeusPedidos = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPedido, setSelectedPedido] = useState<UnifiedPedido | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [cancelingPedidoKey, setCancelingPedidoKey] = useState<string | null>(null);
 
   const loadPedidos = useCallback(async () => {
     if (!user?.id) return;
@@ -328,6 +329,37 @@ const MeusPedidos = () => {
     return type === 'pdf-rg' ? 'PDF de RG' : 'PDF Personalizado';
   };
 
+  const canCancelPedido = (status: PdfRgStatus) => status !== 'entregue';
+
+  const handleCancelPedido = async (pedido: UnifiedPedido) => {
+    if (!canCancelPedido(pedido.status)) return;
+
+    const pedidoKey = `${pedido.type}-${pedido.id}`;
+    if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
+
+    setCancelingPedidoKey(pedidoKey);
+    try {
+      const res = pedido.type === 'pdf-rg'
+        ? await pdfRgService.deletar(pedido.id)
+        : await editarPdfService.deletar(pedido.id);
+
+      if (res.success) {
+        toast.success('Pedido cancelado com sucesso');
+        setPedidos((prev) => prev.filter((item) => !(item.type === pedido.type && item.id === pedido.id)));
+        if (selectedPedido && selectedPedido.type === pedido.type && selectedPedido.id === pedido.id) {
+          setShowModal(false);
+          setSelectedPedido(null);
+        }
+      } else {
+        toast.error(res.error || 'Erro ao cancelar pedido');
+      }
+    } catch {
+      toast.error('Erro ao cancelar pedido');
+    } finally {
+      setCancelingPedidoKey(null);
+    }
+  };
+
   const getTypeBadgeClass = (type: string) => {
     return type === 'pdf-rg' ? 'bg-violet-500/10 text-violet-600 border-violet-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20';
   };
@@ -401,6 +433,18 @@ const MeusPedidos = () => {
                     <Button size="sm" variant="outline" onClick={() => handleView(p)}>
                       <Eye className="h-4 w-4 mr-1" /> Detalhes
                     </Button>
+                    {canCancelPedido(p.status) && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleCancelPedido(p)}
+                        disabled={cancelingPedidoKey === `${p.type}-${p.id}`}
+                        className="gap-1"
+                      >
+                        {cancelingPedidoKey === `${p.type}-${p.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                        {cancelingPedidoKey === `${p.type}-${p.id}` ? 'Cancelando...' : 'Cancelar pedido'}
+                      </Button>
+                    )}
                     {p.status === 'entregue' && p.pdf_entrega_nome && (
                       <Button
                         size="icon"
@@ -486,6 +530,21 @@ const MeusPedidos = () => {
                   <p className="text-muted-foreground mb-2">📄 PDF Entregue:</p>
                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleDownload(selectedPedido)}>
                     <Download className="h-4 w-4 mr-2" /> {selectedPedido.pdf_entrega_nome || 'Download PDF'}
+                  </Button>
+                </div>
+              )}
+
+              {canCancelPedido(selectedPedido.status) && (
+                <div className="border-t pt-3">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleCancelPedido(selectedPedido)}
+                    disabled={cancelingPedidoKey === `${selectedPedido.type}-${selectedPedido.id}`}
+                    className="gap-1"
+                  >
+                    {cancelingPedidoKey === `${selectedPedido.type}-${selectedPedido.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                    {cancelingPedidoKey === `${selectedPedido.type}-${selectedPedido.id}` ? 'Cancelando...' : 'Cancelar pedido'}
                   </Button>
                 </div>
               )}

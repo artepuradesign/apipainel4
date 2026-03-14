@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { pdfRgService, PdfRgPedido, PdfRgStatus } from '@/services/pdfRgService';
 import { editarPdfService, EditarPdfPedido } from '@/services/pdfPersonalizadoService';
 import { qrcodeRegistrationsService, type QrRegistration } from '@/services/qrcodeRegistrationsService';
-import { Search, Eye, Trash2, RefreshCw, Download, Loader2, Upload, Package, DollarSign, Hammer, CheckCircle, X, FileEdit } from 'lucide-react';
+import { Search, Eye, Trash2, RefreshCw, Download, Loader2, Upload, Package, DollarSign, Hammer, CheckCircle, X, FileEdit, Ban } from 'lucide-react';
 import DashboardTitleCard from '@/components/dashboard/DashboardTitleCard';
 import QrCadastroCard from '@/components/qrcode/QrCadastroCard';
 import { getFullApiUrl } from '@/utils/apiHelper';
@@ -163,6 +163,7 @@ const AdminPedidos = () => {
   const [deletingPdf, setDeletingPdf] = useState(false);
   const [savingPdf, setSavingPdf] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [cancelingPedido, setCancelingPedido] = useState(false);
   const [qrCadastroSelecionado, setQrCadastroSelecionado] = useState<QrRegistration | null>(null);
   const [qrCadastroLoading, setQrCadastroLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -577,6 +578,33 @@ const AdminPedidos = () => {
   };
 
   const typeLabel = (type: string) => type === 'pdf-rg' ? 'PDF RG' : 'PDF Personalizado';
+  const canCancelPedido = (status: PdfRgStatus) => status !== 'entregue';
+
+  const handleCancelPedido = async (pedido: UnifiedPedido | null) => {
+    if (!pedido || !canCancelPedido(pedido.status)) return;
+    if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
+
+    setCancelingPedido(true);
+    try {
+      const res = pedido.type === 'pdf-rg'
+        ? await pdfRgService.deletar(pedido.id)
+        : await editarPdfService.deletar(pedido.id);
+
+      if (res.success) {
+        toast.success('Pedido cancelado com sucesso');
+        if (selectedPedido?.id === pedido.id && selectedPedido?.type === pedido.type) {
+          setSelectedPedido(null);
+        }
+        await loadPedidos();
+      } else {
+        toast.error(res.error || 'Erro ao cancelar pedido');
+      }
+    } catch {
+      toast.error('Erro ao cancelar pedido');
+    } finally {
+      setCancelingPedido(false);
+    }
+  };
 
   const renderDetailContent = () => {
     if (!selectedPedido) return null;
@@ -866,17 +894,34 @@ const AdminPedidos = () => {
 
               {/* Status Update */}
               <div className="space-y-3">
-                <p className="text-sm font-medium">Atualizar Status:</p>
-                <p className="text-xs text-muted-foreground">Clique em uma etapa para atualizar o status do pedido.</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">Atualizar Status:</p>
+                    <p className="text-xs text-muted-foreground">Clique em uma etapa para atualizar o status do pedido.</p>
+                  </div>
+                  {canCancelPedido(selectedPedido.status) && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleCancelPedido(selectedPedido)}
+                      disabled={updatingStatus || cancelingPedido}
+                      className="gap-1"
+                    >
+                      {cancelingPedido ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                      {cancelingPedido ? 'Cancelando...' : 'Cancelar pedido'}
+                    </Button>
+                  )}
+                </div>
+
                 <StatusProgressCircles
                   pedido={selectedPedido}
                   onClickStep={handleUpdateStatus}
-                  disabled={updatingStatus}
+                  disabled={updatingStatus || cancelingPedido}
                 />
 
-                {updatingStatus && (
+                {(updatingStatus || cancelingPedido) && (
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Atualizando...
+                    <Loader2 className="h-4 w-4 animate-spin" /> {cancelingPedido ? 'Cancelando...' : 'Atualizando...'}
                   </div>
                 )}
               </div>
