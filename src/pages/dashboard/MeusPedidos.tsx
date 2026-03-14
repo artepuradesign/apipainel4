@@ -88,12 +88,13 @@ type UnifiedPedido = {
   descricao_alteracoes?: string;
 };
 
-const getStepTimestamp = (pedido: UnifiedPedido, step: PdfRgStatus): string | null => {
+const getStepTimestamp = (pedido: UnifiedPedido, step: ActivePedidoStatus): string | null => {
   const map: Record<PdfRgStatus, string | null> = {
     realizado: pedido.realizado_at,
     pagamento_confirmado: pedido.pagamento_confirmado_at,
     em_confeccao: pedido.em_confeccao_at,
     entregue: pedido.entregue_at,
+    cancelado: null,
   };
   return map[step];
 };
