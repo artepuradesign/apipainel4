@@ -1162,6 +1162,7 @@ const TempConsulta = () => {
         </section>
       </main>
 
+      <ScrollToTop />
       <FuturisticFooter />
     </PageLayout>
   );
