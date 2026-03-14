@@ -249,10 +249,9 @@ const ModuleCardTemplates = ({ module, template, theme, isDarkMode: isDarkModePr
   const styles = getTemplateStyles();
 
   // Ajustes de legibilidade (mesmo tamanho no mobile e no desktop)
-  // Altura levemente maior para manter o botão visível com título em 2 linhas
   const cardSizeClass = "w-[150px] h-[205px]";
   const contentPaddingClass = "p-3";
-  const titleClass = "text-sm leading-5 line-clamp-2 min-h-[2.5rem] !whitespace-normal !text-clip";
+  const titleClass = "text-sm leading-5 line-clamp-1 min-h-[1.25rem] !whitespace-normal !text-clip";
   const descriptionClass = "text-xs";
   const priceClass = "text-sm";
   const originalPriceClass = "text-xs";
