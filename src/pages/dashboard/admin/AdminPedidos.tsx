@@ -595,7 +595,7 @@ const AdminPedidos = () => {
   };
 
   const typeLabel = (type: string) => type === 'pdf-rg' ? 'PDF RG' : 'PDF Personalizado';
-  const canCancelPedido = (status: PdfRgStatus) => status !== 'entregue';
+  const canCancelPedido = (status: PdfRgStatus) => !['entregue', 'cancelado'].includes(status);
 
   const handleCancelPedido = async (pedido: UnifiedPedido | null) => {
     if (!pedido || !canCancelPedido(pedido.status)) return;
