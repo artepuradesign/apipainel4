@@ -533,6 +533,21 @@ const MeusPedidos = () => {
                   </Button>
                 </div>
               )}
+
+              {canCancelPedido(selectedPedido.status) && (
+                <div className="border-t pt-3">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleCancelPedido(selectedPedido)}
+                    disabled={cancelingPedidoKey === `${selectedPedido.type}-${selectedPedido.id}`}
+                    className="gap-1"
+                  >
+                    {cancelingPedidoKey === `${selectedPedido.type}-${selectedPedido.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                    {cancelingPedidoKey === `${selectedPedido.type}-${selectedPedido.id}` ? 'Cancelando...' : 'Cancelar pedido'}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
