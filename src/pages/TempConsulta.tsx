@@ -15,6 +15,8 @@ import ScoreGaugeCard from '@/components/dashboard/ScoreGaugeCard';
 import PisSection from '@/components/dashboard/PisSection';
 import { AuxilioEmergencialSection } from '@/components/dashboard/AuxilioEmergencialSection';
 import { RaisSection } from '@/components/dashboard/RaisSection';
+import { useIsMobile } from '@/hooks/use-mobile';
+import placeholderImage from '@/assets/placeholder-photo.png';
 
 type SharedRecord = Record<string, unknown>;
 
@@ -176,19 +178,24 @@ const SharedInputRecordsSection: React.FC<SharedInputRecordsSectionProps> = ({ i
       </CardHeader>
       <CardContent className="space-y-4 p-4 md:p-6">
         {items.map((item, index) => {
-          const resolvedFields =
+          const configuredFields =
             fields?.map((field) => ({
               key: field.keys.join('-'),
               label: field.label,
               value: formatInputValue(getFirstRecordValue(item, field.keys), field.formatter),
-            })).filter((field) => hasValue(field.value)) ??
-            Object.entries(item)
-              .filter(([, value]) => hasValue(value))
-              .map(([key, value]) => ({
-                key,
-                label: formatFieldLabel(key),
-                value: formatInputValue(value),
-              }));
+            })).filter((field) => hasValue(field.value)) ?? [];
+
+          const configuredKeys = new Set((fields ?? []).flatMap((field) => field.keys));
+
+          const dynamicFields = Object.entries(item)
+            .filter(([key, value]) => !configuredKeys.has(key) && hasValue(value))
+            .map(([key, value]) => ({
+              key,
+              label: formatFieldLabel(key),
+              value: formatInputValue(value),
+            }));
+
+          const resolvedFields = [...configuredFields, ...dynamicFields];
 
           if (resolvedFields.length === 0) return null;
 
@@ -316,6 +323,7 @@ const TempConsulta = () => {
   );
 
   const cnpjMeiValue = sharedResult?.cnpj_mei;
+  const isMobile = useIsMobile();
 
   const photoUrls = useMemo(() => {
     const fromSingles = [sharedResult?.foto, sharedResult?.foto2].filter((value): value is string => typeof value === 'string' && value.trim() !== '');
@@ -325,6 +333,12 @@ const TempConsulta = () => {
 
     return [...new Set([...fromSingles, ...fromArray].map(normalizePhotoUrl).filter(Boolean))];
   }, [sharedResult?.foto, sharedResult?.foto2, sharedResult?.fotos, sharedResult?.base_foto]);
+
+  const photoSlotsToRender = useMemo(() => {
+    const desktopSlots = 4;
+    const mobileSlots = photoUrls.length > 2 ? 4 : 2;
+    return isMobile ? mobileSlots : desktopSlots;
+  }, [isMobile, photoUrls.length]);
 
   const badgeCounts = useMemo(() => {
     const fallback = (href: string, current: number) => {
@@ -550,7 +564,7 @@ const TempConsulta = () => {
 
               {hasCpfValue ? (
                 <>
-                  {photoUrls.length > 0 && (
+                  {(photoUrls.length > 0 || (badgeCounts['#fotos-section'] ?? 0) > 0) && (
                     <Card id="fotos-section" className="border-success-border bg-success-subtle">
                       <CardHeader>
                         <div className="flex items-center justify-between gap-3">
@@ -567,11 +581,36 @@ const TempConsulta = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="p-4 md:p-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {photoUrls.map((url, index) => (
-                            <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer" className="block rounded-md overflow-hidden border bg-card">
-                              <img src={url} alt={`Foto ${index + 1}`} className="w-full aspect-[3/4] object-cover" loading="lazy" />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {photoUrls.slice(0, photoSlotsToRender).map((url, index) => (
+                            <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer" className="block overflow-hidden border-2 rounded-md bg-card">
+                              <img
+                                src={url}
+                                alt={`Foto ${index + 1}`}
+                                className="w-full h-full object-cover aspect-[3/4]"
+                                loading="lazy"
+                                onError={(event) => {
+                                  (event.currentTarget as HTMLImageElement).src = placeholderImage;
+                                }}
+                              />
+                              <div className="p-2 text-sm font-medium text-center bg-primary text-primary-foreground">
+                                Foto {index + 1}
+                              </div>
                             </a>
+                          ))}
+
+                          {Array.from({ length: Math.max(0, photoSlotsToRender - photoUrls.length) }).map((_, index) => (
+                            <div key={`placeholder-${index}`} className="overflow-hidden border-2 rounded-md bg-card">
+                              <img
+                                src={placeholderImage}
+                                alt={`Foto ${photoUrls.length + index + 1} (simulação)`}
+                                className="w-full h-full object-cover aspect-[3/4]"
+                                loading="lazy"
+                              />
+                              <div className="p-2 text-sm font-medium text-center bg-primary text-primary-foreground">
+                                Foto {photoUrls.length + index + 1}
+                              </div>
+                            </div>
                           ))}
                         </div>
                       </CardContent>

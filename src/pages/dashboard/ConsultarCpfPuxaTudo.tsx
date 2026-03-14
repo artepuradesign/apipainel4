@@ -106,6 +106,7 @@ import { baseOperadoraOiService } from '@/services/baseOperadoraOiService';
 import { baseSenhaEmailService } from '@/services/baseSenhaEmailService';
 import { baseSenhaCpfService } from '@/services/baseSenhaCpfService';
 import { baseGestaoService } from '@/services/baseGestaoService';
+import { baseFotoService } from '@/services/baseFotoService';
 import { tempConsultationShareService } from '@/services/tempConsultationShareService';
 
 // Função melhorada para consultar CPF e registrar com debug robusto
@@ -3636,8 +3637,22 @@ Todos os direitos reservados.`;
       throw new Error('Não foi possível gerar os dados para compartilhamento.');
     }
 
+    let sharedFotos: Array<{ id?: number; cpf_id?: number; cpf?: string; nome?: string; photo?: string }> = [];
+
+    if (result.id) {
+      try {
+        const fotosResponse = await baseFotoService.getByCpfId(Number(result.id));
+        if (fotosResponse.success && Array.isArray(fotosResponse.data)) {
+          sharedFotos = fotosResponse.data;
+        }
+      } catch (error) {
+        console.warn('[TEMP_SHARE] Falha ao incluir fotos no payload compartilhado:', error);
+      }
+    }
+
     const sharedResultData = {
       ...result,
+      base_foto: sharedFotos,
       auxilio_emergencial: auxiliosEmergenciais,
       rais_historico: rais,
     };
@@ -3675,6 +3690,7 @@ Todos os direitos reservados.`;
       : 0;
     const tituloEleitorBadgeCount = [result.titulo_eleitor, result.zona, result.secao].some(hasBadgeValue) ? 1 : 0;
     const pisBadgeCount = hasBadgeValue(result.pis) ? 1 : 0;
+    const fotosShareCount = sharedFotos.length > 0 ? sharedFotos.length : fotosCount;
 
     const share = await tempConsultationShareService.createTemporaryShare({
       cpf: result.cpf,
@@ -3685,7 +3701,7 @@ Todos os direitos reservados.`;
         generated_at: new Date().toISOString(),
         result_data: sharedResultData,
         badge_counts: {
-          '#fotos-section': fotosCount,
+          '#fotos-section': fotosShareCount,
           '#score-section': scoreBadgeCount,
           '#csb8-section': csb8BadgeCount,
           '#csba-section': csbaBadgeCount,
