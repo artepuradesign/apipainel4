@@ -329,7 +329,7 @@ const MeusPedidos = () => {
     return type === 'pdf-rg' ? 'PDF de RG' : 'PDF Personalizado';
   };
 
-  const canCancelPedido = (status: PdfRgStatus) => status !== 'entregue';
+  const canCancelPedido = (status: PdfRgStatus) => ['realizado', 'pagamento_confirmado'].includes(status);
 
   const handleCancelPedido = async (pedido: UnifiedPedido) => {
     if (!canCancelPedido(pedido.status)) return;
