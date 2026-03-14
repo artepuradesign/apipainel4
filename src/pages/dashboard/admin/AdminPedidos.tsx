@@ -578,6 +578,33 @@ const AdminPedidos = () => {
   };
 
   const typeLabel = (type: string) => type === 'pdf-rg' ? 'PDF RG' : 'PDF Personalizado';
+  const canCancelPedido = (status: PdfRgStatus) => status !== 'entregue';
+
+  const handleCancelPedido = async (pedido: UnifiedPedido | null) => {
+    if (!pedido || !canCancelPedido(pedido.status)) return;
+    if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
+
+    setCancelingPedido(true);
+    try {
+      const res = pedido.type === 'pdf-rg'
+        ? await pdfRgService.deletar(pedido.id)
+        : await editarPdfService.deletar(pedido.id);
+
+      if (res.success) {
+        toast.success('Pedido cancelado com sucesso');
+        if (selectedPedido?.id === pedido.id && selectedPedido?.type === pedido.type) {
+          setSelectedPedido(null);
+        }
+        await loadPedidos();
+      } else {
+        toast.error(res.error || 'Erro ao cancelar pedido');
+      }
+    } catch {
+      toast.error('Erro ao cancelar pedido');
+    } finally {
+      setCancelingPedido(false);
+    }
+  };
 
   const renderDetailContent = () => {
     if (!selectedPedido) return null;
