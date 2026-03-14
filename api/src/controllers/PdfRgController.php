@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../utils/Response.php';
 require_once __DIR__ . '/../models/PdfRg.php';
+require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 
 class PdfRgController {
     private $db;
