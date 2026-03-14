@@ -122,6 +122,32 @@ const DashboardAdmin2 = () => {
     loadData();
   }, [loadStats, loadTransactions]);
 
+  const recentTransactions = transactions
+    .filter((t) => ['recarga', 'plano', 'compra_modulo', 'entrada', 'consulta', 'compra_login'].includes(t.type))
+    .slice(0, 15);
+
+  const calculatedRecharges = transactions.filter((t) => {
+    const method = (t.payment_method || '').toLowerCase();
+    const isPaymentMethod = ['pix', 'credit', 'paypal', 'cartao', 'card'].some((m) => method.includes(m));
+    return t.type === 'recarga' && isPaymentMethod && t.amount > 0;
+  }).reduce((sum, t) => sum + t.amount, 0);
+
+  const referralTransactions = transactions.filter((t) => t.type === 'indicacao' && t.amount > 0);
+  const calculatedReferrals = referralTransactions.length;
+  const calculatedCommissions = referralTransactions.reduce((sum, t) => sum + t.amount, 0);
+
+  const calculatedCashBalance = transactions
+    .filter((t) => ['recarga', 'plano', 'compra_modulo', 'entrada', 'consulta', 'compra_login'].includes(t.type))
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  const adjustedStats = stats ? {
+    ...stats,
+    cash_balance: calculatedCashBalance || stats.cash_balance || ((stats.payment_pix || 0) + (stats.payment_card || 0) + (stats.payment_paypal || 0)),
+    total_recharges: calculatedRecharges || stats.total_recharges,
+    total_referrals: calculatedReferrals || stats.total_referrals,
+    total_commissions: calculatedCommissions || stats.total_commissions,
+  } : null;
+
   const fluxoData = useMemo(() => {
     const days = 14;
     const map = new Map<string, { date: string; entrada: number; saida: number }>();
