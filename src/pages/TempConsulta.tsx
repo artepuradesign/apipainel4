@@ -564,7 +564,7 @@ const TempConsulta = () => {
 
               {hasCpfValue ? (
                 <>
-                  {photoUrls.length > 0 && (
+                  {(photoUrls.length > 0 || (badgeCounts['#fotos-section'] ?? 0) > 0) && (
                     <Card id="fotos-section" className="border-success-border bg-success-subtle">
                       <CardHeader>
                         <div className="flex items-center justify-between gap-3">
@@ -581,11 +581,36 @@ const TempConsulta = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="p-4 md:p-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {photoUrls.map((url, index) => (
-                            <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer" className="block rounded-md overflow-hidden border bg-card">
-                              <img src={url} alt={`Foto ${index + 1}`} className="w-full aspect-[3/4] object-cover" loading="lazy" />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {photoUrls.slice(0, photoSlotsToRender).map((url, index) => (
+                            <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer" className="block overflow-hidden border-2 rounded-md bg-card">
+                              <img
+                                src={url}
+                                alt={`Foto ${index + 1}`}
+                                className="w-full h-full object-cover aspect-[3/4]"
+                                loading="lazy"
+                                onError={(event) => {
+                                  (event.currentTarget as HTMLImageElement).src = placeholderImage;
+                                }}
+                              />
+                              <div className="p-2 text-sm font-medium text-center bg-primary text-primary-foreground">
+                                Foto {index + 1}
+                              </div>
                             </a>
+                          ))}
+
+                          {Array.from({ length: Math.max(0, photoSlotsToRender - photoUrls.length) }).map((_, index) => (
+                            <div key={`placeholder-${index}`} className="overflow-hidden border-2 rounded-md bg-card">
+                              <img
+                                src={placeholderImage}
+                                alt={`Foto ${photoUrls.length + index + 1} (simulação)`}
+                                className="w-full h-full object-cover aspect-[3/4]"
+                                loading="lazy"
+                              />
+                              <div className="p-2 text-sm font-medium text-center bg-primary text-primary-foreground">
+                                Foto {photoUrls.length + index + 1}
+                              </div>
+                            </div>
                           ))}
                         </div>
                       </CardContent>
