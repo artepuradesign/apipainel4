@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../utils/Response.php';
 require_once __DIR__ . '/../models/PdfRg.php';
+require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 
 class PdfRgController {
     private $db;
@@ -129,7 +130,10 @@ class PdfRgController {
             $id = $_GET['id'] ?? null;
             if (!$id) { Response::error('ID é obrigatório', 400); return; }
 
-            $success = $this->model->deletarPedido((int)$id);
+            $actorUserId = AuthMiddleware::getCurrentUserId();
+            $actorRole = $this->getUserRoleById($actorUserId);
+
+            $success = $this->model->deletarPedido((int)$id, $actorRole, $actorUserId ? (int)$actorUserId : null);
             if ($success) {
                 Response::success(['id' => (int)$id], 'Pedido deletado');
             } else {
@@ -138,5 +142,15 @@ class PdfRgController {
         } catch (Exception $e) {
             Response::error('Erro ao deletar pedido: ' . $e->getMessage(), 400);
         }
+    }
+
+    private function getUserRoleById($userId) {
+        if (!$userId) return null;
+
+        $stmt = $this->db->prepare("SELECT user_role FROM users WHERE id = ? LIMIT 1");
+        $stmt->execute([(int)$userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row['user_role'] ?? null;
     }
 }

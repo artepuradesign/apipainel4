@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/BaseModel.php';
 require_once __DIR__ . '/../utils/FileUpload.php';
+require_once __DIR__ . '/../services/WalletService.php';
 
 class PdfRg extends BaseModel {
     protected $table = 'pdf_rg_pedidos';
@@ -220,12 +221,59 @@ class PdfRg extends BaseModel {
         return $stmt->execute([$now, $now, (int)$id]);
     }
 
-    public function deletarPedido($id) {
-        // Deletar arquivos do disco
-        $stmt = $this->db->prepare("SELECT anexo1_nome, anexo2_nome, anexo3_nome, pdf_entrega_nome FROM {$this->table} WHERE id = ?");
-        $stmt->execute([$id]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
+    public function deletarPedido($id, $actorRole = null, $actorUserId = null) {
+        $id = (int)$id;
+        $walletService = new WalletService($this->db);
+
+        try {
+            $this->db->beginTransaction();
+
+            $stmt = $this->db->prepare("SELECT user_id, preco_pago, status, anexo1_nome, anexo2_nome, anexo3_nome, pdf_entrega_nome FROM {$this->table} WHERE id = ? LIMIT 1");
+            $stmt->execute([$id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                throw new Exception('Pedido não encontrado');
+            }
+
+            $canRefund = in_array($actorRole, ['admin', 'suporte'], true)
+                && !empty($row['user_id'])
+                && (float)$row['preco_pago'] > 0
+                && ($row['status'] ?? null) !== 'entregue';
+
+            if ($canRefund) {
+                $refundReferenceType = 'pedido_cancelado_pdf_rg';
+                $checkRefundStmt = $this->db->prepare("SELECT id FROM wallet_transactions WHERE user_id = ? AND reference_type = ? AND reference_id = ? LIMIT 1");
+                $checkRefundStmt->execute([(int)$row['user_id'], $refundReferenceType, $id]);
+                $existingRefund = $checkRefundStmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$existingRefund) {
+                    $refundDescription = "Extorno cancelamento admin PDF RG #{$id}";
+                    $refundResult = $walletService->createTransaction(
+                        (int)$row['user_id'],
+                        'entrada',
+                        (float)$row['preco_pago'],
+                        $refundDescription,
+                        $refundReferenceType,
+                        $id,
+                        'plan'
+                    );
+
+                    if (!$refundResult['success']) {
+                        throw new Exception($refundResult['message'] ?? 'Falha ao estornar saldo do plano');
+                    }
+                }
+            }
+
+            $deleteStmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id = ?");
+            $deleted = $deleteStmt->execute([$id]);
+
+            if (!$deleted) {
+                throw new Exception('Falha ao excluir pedido');
+            }
+
+            $this->db->commit();
+
             foreach (['anexo1_nome', 'anexo2_nome', 'anexo3_nome', 'pdf_entrega_nome'] as $field) {
                 if (!empty($row[$field])) {
                     if ($field === 'pdf_entrega_nome') {
@@ -235,10 +283,13 @@ class PdfRg extends BaseModel {
                     }
                 }
             }
-        }
 
-        $query = "DELETE FROM {$this->table} WHERE id = ?";
-        $stmt = $this->db->prepare($query);
-        return $stmt->execute([$id]);
+            return true;
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
     }
 }
