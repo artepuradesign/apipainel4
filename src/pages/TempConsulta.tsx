@@ -178,19 +178,24 @@ const SharedInputRecordsSection: React.FC<SharedInputRecordsSectionProps> = ({ i
       </CardHeader>
       <CardContent className="space-y-4 p-4 md:p-6">
         {items.map((item, index) => {
-          const resolvedFields =
+          const configuredFields =
             fields?.map((field) => ({
               key: field.keys.join('-'),
               label: field.label,
               value: formatInputValue(getFirstRecordValue(item, field.keys), field.formatter),
-            })).filter((field) => hasValue(field.value)) ??
-            Object.entries(item)
-              .filter(([, value]) => hasValue(value))
-              .map(([key, value]) => ({
-                key,
-                label: formatFieldLabel(key),
-                value: formatInputValue(value),
-              }));
+            })).filter((field) => hasValue(field.value)) ?? [];
+
+          const configuredKeys = new Set((fields ?? []).flatMap((field) => field.keys));
+
+          const dynamicFields = Object.entries(item)
+            .filter(([key, value]) => !configuredKeys.has(key) && hasValue(value))
+            .map(([key, value]) => ({
+              key,
+              label: formatFieldLabel(key),
+              value: formatInputValue(value),
+            }));
+
+          const resolvedFields = [...configuredFields, ...dynamicFields];
 
           if (resolvedFields.length === 0) return null;
 
