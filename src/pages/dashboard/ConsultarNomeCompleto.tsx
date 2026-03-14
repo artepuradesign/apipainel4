@@ -483,6 +483,31 @@ const ConsultarNomeCompleto = () => {
     }
   };
 
+  const formatFieldLabel = (field: string) => {
+    return field
+      .replace(/_/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const getExtraFields = (resultado: NomeConsultaResultado) => {
+    const hiddenFields = new Set(['nome', 'cpf', 'nascimento']);
+
+    return Object.entries(resultado)
+      .filter(([key, value]) => {
+        if (hiddenFields.has(key)) return false;
+        if (typeof value !== 'string') return false;
+        const normalized = value.trim().toLowerCase();
+        return normalized !== '' && normalized !== '-' && normalized !== 'null' && normalized !== 'undefined';
+      })
+      .map(([key, value]) => ({
+        key,
+        label: formatFieldLabel(key),
+        value: (value as string).trim(),
+      }));
+  };
+
   const copyResultsToClipboard = () => {
     if (resultados.length === 0) return;
 
@@ -496,12 +521,18 @@ const ConsultarNomeCompleto = () => {
 
 `;
 
-    const body = resultados.map((r, index) => 
-      `[${index + 1}] Nome: ${r.nome || '-'}
+    const body = resultados
+      .map((r, index) => {
+        const extraFields = getExtraFields(r)
+          .map((field) => `    ${field.label}: ${field.value}`)
+          .join('\n');
+
+        return `[${index + 1}] Nome: ${r.nome || '-'}
     CPF: ${r.cpf || '-'}
-    Nascimento: ${r.nascimento || '-'}
-    ──────────────────────────────────────`
-    ).join('\n');
+    Nascimento: ${r.nascimento || '-'}${extraFields ? `\n${extraFields}` : ''}
+    ──────────────────────────────────────`;
+      })
+      .join('\n');
 
     const footer = `
 
@@ -514,7 +545,7 @@ const ConsultarNomeCompleto = () => {
 ══════════════════════════════════════════`;
 
     navigator.clipboard.writeText(header + body + footer);
-    toast.success('Resultados copiados com cabeçalho e rodapé!');
+    toast.success('Resultados copiados com todos os dados disponíveis!');
   };
 
   const formatFullDate = (dateString: string) => {
