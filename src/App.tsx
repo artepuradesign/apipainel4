@@ -234,7 +234,6 @@ function App() {
                     {/* Dashboard routes */}
                     <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
                     <Route path="/dashboard/admin" element={<DashboardLayout><DashboardAdmin /></DashboardLayout>} />
-                    <Route path="/dashboard/admin2" element={<DashboardLayout><DashboardAdmin2 /></DashboardLayout>} />
                     <Route path="/dashboard/admin/caixa" element={<DashboardLayout><AdminCaixa /></DashboardLayout>} />
                     <Route path="/dashboard/admin/compra-planos" element={<DashboardLayout><AdminCompraPlanos /></DashboardLayout>} />
                     <Route path="/dashboard/admin/recargas" element={<DashboardLayout><AdminRecargas /></DashboardLayout>} />

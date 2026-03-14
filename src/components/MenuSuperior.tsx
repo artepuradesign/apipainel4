@@ -131,17 +131,6 @@ const MenuSuperior = () => {
                     </TooltipContent>
                   </Tooltip>
                 )}
-                {shouldShowAdminVersionSwitch && (
-                  <Link to={adminVersionTarget}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={cn(liquidGlassConfig.enabled && "hover:bg-white/10")}
-                    >
-                      {adminVersionLabel}
-                    </Button>
-                  </Link>
-                )}
               </div>
             </div>
 
