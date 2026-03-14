@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { getFullApiUrl } from '@/utils/apiHelper';
 import { pdfRgService, PdfRgPedido, PdfRgStatus } from '@/services/pdfRgService';
 import { editarPdfService, EditarPdfPedido, EditarPdfStatus } from '@/services/pdfPersonalizadoService';
-import { Eye, Download, Loader2, Package, DollarSign, Hammer, CheckCircle, ClipboardList, Upload, FileDown, FileText } from 'lucide-react';
+import { Eye, Download, Loader2, Package, DollarSign, Hammer, CheckCircle, ClipboardList, Upload, FileDown, FileText, Ban } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardTitleCard from '@/components/dashboard/DashboardTitleCard';
 import { useNavigate } from 'react-router-dom';
