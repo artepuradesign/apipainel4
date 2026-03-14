@@ -845,17 +845,36 @@ const ConsultarNomeCompleto = () => {
                     <TableRow>
                       <TableHead className="min-w-[200px]">Nome</TableHead>
                       <TableHead className="min-w-[130px]">CPF</TableHead>
-                      <TableHead className="min-w-[100px]">Nascimento</TableHead>
+                      <TableHead className="min-w-[110px]">Nascimento</TableHead>
+                      <TableHead className="min-w-[320px]">Demais Dados</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {resultados.map((resultado, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{resultado.nome || '—'}</TableCell>
-                        <TableCell className="font-mono text-sm">{resultado.cpf || '—'}</TableCell>
-                        <TableCell>{resultado.nascimento || '—'}</TableCell>
-                      </TableRow>
-                    ))}
+                    {resultados.map((resultado, index) => {
+                      const extraFields = getExtraFields(resultado);
+
+                      return (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{resultado.nome || '—'}</TableCell>
+                          <TableCell className="font-mono text-sm">{resultado.cpf || '—'}</TableCell>
+                          <TableCell>{resultado.nascimento || '—'}</TableCell>
+                          <TableCell>
+                            {extraFields.length > 0 ? (
+                              <div className="space-y-1">
+                                {extraFields.map((field) => (
+                                  <div key={field.key} className="text-xs leading-relaxed">
+                                    <span className="text-muted-foreground">{field.label}: </span>
+                                    <span className="text-foreground">{field.value}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

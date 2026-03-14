@@ -2,59 +2,99 @@ import type { NomeConsultaResultado } from "@/services/buscaNomeService";
 
 /**
  * Extrai resultados do HTML de `api.fdxapis.us/temp/...`.
- * O link normalmente traz uma tabela com colunas: Nome | CPF | Nascimento | ...
+ * Mantém campos principais e também preserva colunas extras retornadas no HTML.
  */
 export function parseFdxHtmlResults(html: string): NomeConsultaResultado[] {
-  // DOMParser só existe no browser (esta função é usada no frontend)
   if (typeof window === "undefined" || typeof DOMParser === "undefined") return [];
 
   const doc = new DOMParser().parseFromString(html, "text/html");
-
-  // Em geral existe apenas 1 tabela principal de resultados.
   const table = doc.querySelector("table");
   if (!table) return [];
 
-  const rows = Array.from(table.querySelectorAll("tbody tr"));
-  if (rows.length === 0) {
-    // fallback: algumas páginas podem não ter <tbody>
-    const fallbackRows = Array.from(table.querySelectorAll("tr")).slice(1);
-    return fallbackRows.map(parseRow).filter(Boolean) as NomeConsultaResultado[];
-  }
+  const headerCells = Array.from(table.querySelectorAll("thead th")).map((th) => normalizeText(th.textContent || ""));
+  const bodyRows = Array.from(table.querySelectorAll("tbody tr"));
+  const fallbackRows = bodyRows.length > 0 ? bodyRows : Array.from(table.querySelectorAll("tr")).slice(1);
 
-  return rows.map(parseRow).filter(Boolean) as NomeConsultaResultado[];
+  return fallbackRows
+    .map((row) => parseRow(row as HTMLTableRowElement, headerCells))
+    .filter(Boolean) as NomeConsultaResultado[];
 }
 
-function parseRow(tr: HTMLTableRowElement): NomeConsultaResultado | null {
+function parseRow(tr: HTMLTableRowElement, headers: string[]): NomeConsultaResultado | null {
   const tds = Array.from(tr.querySelectorAll("td"));
-  if (tds.length < 3) return null;
+  if (tds.length === 0) return null;
 
-  const rawNome = normalizeText(tds[0]?.textContent || "");
-  const rawCpf = normalizeText(tds[1]?.textContent || "");
-  const rawNasc = normalizeText(tds[2]?.textContent || "");
+  const mapped: Record<string, string> = {};
 
-  // Nome costuma vir em múltiplas linhas (sigla, nome, ID...)
-  const nomeLines = rawNome
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  const nome = (nomeLines.length >= 2 ? nomeLines[1] : nomeLines[0] || "").trim();
+  tds.forEach((td, index) => {
+    const rawValue = normalizeText(td.textContent || "");
+    if (!rawValue) return;
 
-  // Nascimento costuma vir como "dd/mm/aaaa\nXX anos"
-  const nascimento = extractDate(rawNasc) || (rawNasc.split("\n")[0] || "").trim();
+    const header = headers[index] || `campo_${index + 1}`;
+    const normalizedKey = normalizeHeaderToKey(header, index);
 
-  if (!nome && !rawCpf && !nascimento) return null;
+    mapped[normalizedKey] = normalizeFieldValue(normalizedKey, rawValue);
+  });
 
-  // Interface exige campos extras; como a tela só exibe Nome/CPF/Nascimento,
-  // mantemos os demais como string vazia para evitar payloads gigantes.
+  const nome = mapped.nome || "-";
+  const cpf = mapped.cpf || "-";
+  const nascimento = mapped.nascimento || "-";
+
+  if (!nome && !cpf && !nascimento && Object.keys(mapped).length === 0) return null;
+
   return {
-    nome: nome || "-",
-    cpf: rawCpf || "-",
-    nascimento: nascimento || "-",
-    idade: "",
-    sexo: "",
-    enderecos: "",
-    cidades: "",
+    nome,
+    cpf,
+    nascimento,
+    idade: mapped.idade || "",
+    sexo: mapped.sexo || "",
+    enderecos: mapped.enderecos || "",
+    cidades: mapped.cidades || "",
+    nome_mae: mapped.nome_mae || "",
+    ...mapped,
   };
+}
+
+function normalizeHeaderToKey(header: string, index: number): string {
+  const normalized = normalizeText(header)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (!normalized) return `campo_${index + 1}`;
+
+  if (normalized.includes("nome") && normalized.includes("mae")) return "nome_mae";
+  if (normalized.includes("nome") && !normalized.includes("pai")) return "nome";
+  if (normalized.includes("cpf")) return "cpf";
+  if (normalized.includes("nascimento") || normalized.includes("nasc")) return "nascimento";
+  if (normalized.includes("idade")) return "idade";
+  if (normalized.includes("sexo")) return "sexo";
+  if (normalized.includes("endereco")) return "enderecos";
+  if (normalized.includes("cidade")) return "cidades";
+
+  return normalized
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "") || `campo_${index + 1}`;
+}
+
+function normalizeFieldValue(key: string, value: string): string {
+  if (key === "nascimento") {
+    return extractDate(value) || (value.split("\n")[0] || value).trim();
+  }
+
+  if (key === "nome") {
+    const lines = value
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    return (lines.length >= 2 ? lines[1] : lines[0] || "").trim();
+  }
+
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(" | ");
 }
 
 function normalizeText(value: string): string {
