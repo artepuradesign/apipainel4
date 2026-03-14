@@ -15,6 +15,8 @@ import ScoreGaugeCard from '@/components/dashboard/ScoreGaugeCard';
 import PisSection from '@/components/dashboard/PisSection';
 import { AuxilioEmergencialSection } from '@/components/dashboard/AuxilioEmergencialSection';
 import { RaisSection } from '@/components/dashboard/RaisSection';
+import { useIsMobile } from '@/hooks/use-mobile';
+import placeholderImage from '@/assets/placeholder-photo.png';
 
 type SharedRecord = Record<string, unknown>;
 
