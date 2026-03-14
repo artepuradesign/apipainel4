@@ -119,6 +119,7 @@ import BaseReceitaAdmin from '@/pages/dashboard/admin/BaseReceitaAdmin';
 
 import PainelIndividual from '@/pages/dashboard/PainelIndividual';
 import DashboardAdmin from '@/pages/dashboard/DashboardAdmin';
+import DashboardAdmin2 from '@/pages/dashboard/DashboardAdmin2';
 import AdminCaixa from '@/pages/dashboard/admin/AdminCaixa';
 import AdminCompraPlanos from '@/pages/dashboard/admin/AdminCompraPlanos';
 import AdminRecargas from '@/pages/dashboard/admin/AdminRecargas';
@@ -234,6 +235,7 @@ function App() {
                     {/* Dashboard routes */}
                     <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
                     <Route path="/dashboard/admin" element={<DashboardLayout><DashboardAdmin /></DashboardLayout>} />
+                    <Route path="/dashboard/admin2" element={<DashboardLayout><DashboardAdmin2 /></DashboardLayout>} />
                     <Route path="/dashboard/admin/caixa" element={<DashboardLayout><AdminCaixa /></DashboardLayout>} />
                     <Route path="/dashboard/admin/compra-planos" element={<DashboardLayout><AdminCompraPlanos /></DashboardLayout>} />
                     <Route path="/dashboard/admin/recargas" element={<DashboardLayout><AdminRecargas /></DashboardLayout>} />
