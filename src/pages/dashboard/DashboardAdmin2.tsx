@@ -25,6 +25,9 @@ import {
   YAxis,
 } from 'recharts';
 import DashboardTitleCard from '@/components/dashboard/DashboardTitleCard';
+import UnifiedAdminStatsCards from '@/components/dashboard/UnifiedAdminStatsCards';
+import AdminRecentTransactions from '@/components/dashboard/AdminRecentTransactions';
+import OnlineUsersLeaderboard from '@/components/dashboard/OnlineUsersLeaderboard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
