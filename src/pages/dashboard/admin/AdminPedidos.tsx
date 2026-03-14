@@ -16,13 +16,16 @@ import QrCadastroCard from '@/components/qrcode/QrCadastroCard';
 import { getFullApiUrl } from '@/utils/apiHelper';
 import { cookieUtils } from '@/utils/cookieUtils';
 
-const STATUS_ORDER: PdfRgStatus[] = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
+type ActivePedidoStatus = Exclude<PdfRgStatus, 'cancelado'>;
+
+const STATUS_ORDER: ActivePedidoStatus[] = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
 
 const statusLabels: Record<PdfRgStatus, string> = {
   realizado: 'Pedido Realizado',
   pagamento_confirmado: 'Pagamento Confirmado',
   em_confeccao: 'Em Confecção',
   entregue: 'Entregue',
+  cancelado: 'Cancelado',
 };
 
 const statusIcons: Record<PdfRgStatus, React.ReactNode> = {
@@ -30,6 +33,7 @@ const statusIcons: Record<PdfRgStatus, React.ReactNode> = {
   pagamento_confirmado: <DollarSign className="h-5 w-5" />,
   em_confeccao: <Hammer className="h-5 w-5" />,
   entregue: <CheckCircle className="h-5 w-5" />,
+  cancelado: <Ban className="h-5 w-5" />,
 };
 
 const statusColors: Record<PdfRgStatus, string> = {
@@ -37,6 +41,7 @@ const statusColors: Record<PdfRgStatus, string> = {
   pagamento_confirmado: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
   em_confeccao: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
   entregue: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  cancelado: 'bg-destructive/10 text-destructive border-destructive/30',
 };
 
 const formatDateBR = (dateStr: string | null) => {
@@ -51,7 +56,7 @@ const formatTime = (dateString: string | null) => {
   return new Date(dateString).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
-const getStatusIndex = (status: PdfRgStatus) => STATUS_ORDER.indexOf(status);
+const getStatusIndex = (status: PdfRgStatus) => status === 'cancelado' ? -1 : STATUS_ORDER.indexOf(status);
 
 type UnifiedPedido = {
   type: 'pdf-rg' | 'pdf-personalizado';
@@ -70,12 +75,13 @@ type UnifiedPedido = {
   raw_personalizado?: EditarPdfPedido;
 };
 
-const getStepTimestamp = (pedido: UnifiedPedido, step: PdfRgStatus): string | null => {
+const getStepTimestamp = (pedido: UnifiedPedido, step: ActivePedidoStatus): string | null => {
   const map: Record<PdfRgStatus, string | null> = {
     realizado: pedido.realizado_at,
     pagamento_confirmado: pedido.pagamento_confirmado_at,
     em_confeccao: pedido.em_confeccao_at,
     entregue: pedido.entregue_at,
+    cancelado: null,
   };
   return map[step];
 };
@@ -89,6 +95,17 @@ const StatusProgressCircles = ({
   onClickStep?: (step: PdfRgStatus) => void;
   disabled?: boolean;
 }) => {
+  if (pedido.status === 'cancelado') {
+    return (
+      <div className="w-full py-4">
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-foreground flex items-center gap-2">
+          <Ban className="h-4 w-4 text-destructive" />
+          Pedido cancelado e mantido para auditoria.
+        </div>
+      </div>
+    );
+  }
+
   const currentIdx = getStatusIndex(pedido.status);
 
   return (
@@ -578,7 +595,7 @@ const AdminPedidos = () => {
   };
 
   const typeLabel = (type: string) => type === 'pdf-rg' ? 'PDF RG' : 'PDF Personalizado';
-  const canCancelPedido = (status: PdfRgStatus) => status !== 'entregue';
+  const canCancelPedido = (status: PdfRgStatus) => !['entregue', 'cancelado'].includes(status);
 
   const handleCancelPedido = async (pedido: UnifiedPedido | null) => {
     if (!pedido || !canCancelPedido(pedido.status)) return;
@@ -718,6 +735,7 @@ const AdminPedidos = () => {
             <SelectItem value="pagamento_confirmado">Pagamento Confirmado</SelectItem>
             <SelectItem value="em_confeccao">Em Confecção</SelectItem>
             <SelectItem value="entregue">Entregue</SelectItem>
+            <SelectItem value="cancelado">Cancelado</SelectItem>
           </SelectContent>
         </Select>
         <Button variant="outline" size="icon" onClick={loadPedidos}>

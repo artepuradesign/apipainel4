@@ -12,13 +12,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import DashboardTitleCard from '@/components/dashboard/DashboardTitleCard';
 import { useNavigate } from 'react-router-dom';
 
-const STATUS_ORDER: PdfRgStatus[] = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
+type ActivePedidoStatus = Exclude<PdfRgStatus, 'cancelado'>;
+
+const STATUS_ORDER: ActivePedidoStatus[] = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
 
 const statusLabels: Record<PdfRgStatus, string> = {
   realizado: 'Pedido Realizado',
   pagamento_confirmado: 'Pagamento Confirmado',
   em_confeccao: 'Em Confecção',
   entregue: 'Entregue',
+  cancelado: 'Cancelado',
 };
 
 const statusIcons: Record<PdfRgStatus, React.ReactNode> = {
@@ -26,6 +29,7 @@ const statusIcons: Record<PdfRgStatus, React.ReactNode> = {
   pagamento_confirmado: <DollarSign className="h-5 w-5" />,
   em_confeccao: <Hammer className="h-5 w-5" />,
   entregue: <CheckCircle className="h-5 w-5" />,
+  cancelado: <Ban className="h-5 w-5" />,
 };
 
 const statusBadgeColors: Record<PdfRgStatus, string> = {
@@ -33,6 +37,7 @@ const statusBadgeColors: Record<PdfRgStatus, string> = {
   pagamento_confirmado: 'bg-emerald-500 text-white',
   em_confeccao: 'bg-blue-500 text-white',
   entregue: 'bg-emerald-500 text-white',
+  cancelado: 'bg-destructive text-destructive-foreground',
 };
 
 const formatDateBR = (dateStr: string | null) => {
@@ -52,7 +57,7 @@ const formatTime = (dateString: string | null) => {
   return new Date(dateString).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
-const getStatusIndex = (status: PdfRgStatus) => STATUS_ORDER.indexOf(status);
+const getStatusIndex = (status: PdfRgStatus) => status === 'cancelado' ? -1 : STATUS_ORDER.indexOf(status);
 
 type UnifiedPedido = {
   type: 'pdf-rg' | 'pdf-personalizado';
@@ -83,17 +88,29 @@ type UnifiedPedido = {
   descricao_alteracoes?: string;
 };
 
-const getStepTimestamp = (pedido: UnifiedPedido, step: PdfRgStatus): string | null => {
+const getStepTimestamp = (pedido: UnifiedPedido, step: ActivePedidoStatus): string | null => {
   const map: Record<PdfRgStatus, string | null> = {
     realizado: pedido.realizado_at,
     pagamento_confirmado: pedido.pagamento_confirmado_at,
     em_confeccao: pedido.em_confeccao_at,
     entregue: pedido.entregue_at,
+    cancelado: null,
   };
   return map[step];
 };
 
 const StatusTracker = ({ pedido }: { pedido: UnifiedPedido }) => {
+  if (pedido.status === 'cancelado') {
+    return (
+      <div className="w-full py-4 px-4">
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-foreground flex items-center gap-2">
+          <Ban className="h-4 w-4 text-destructive" />
+          Pedido cancelado e mantido no histórico para auditoria.
+        </div>
+      </div>
+    );
+  }
+
   const currentIdx = getStatusIndex(pedido.status);
 
   return (
@@ -345,10 +362,13 @@ const MeusPedidos = () => {
 
       if (res.success) {
         toast.success('Pedido cancelado com sucesso');
-        setPedidos((prev) => prev.filter((item) => !(item.type === pedido.type && item.id === pedido.id)));
+        setPedidos((prev) => prev.map((item) => (
+          item.type === pedido.type && item.id === pedido.id
+            ? { ...item, status: 'cancelado' as PdfRgStatus }
+            : item
+        )));
         if (selectedPedido && selectedPedido.type === pedido.type && selectedPedido.id === pedido.id) {
-          setShowModal(false);
-          setSelectedPedido(null);
+          setSelectedPedido({ ...selectedPedido, status: 'cancelado' as PdfRgStatus });
         }
       } else {
         toast.error(res.error || 'Erro ao cancelar pedido');

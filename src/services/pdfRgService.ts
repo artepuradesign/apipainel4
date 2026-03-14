@@ -1,7 +1,7 @@
 import { cookieUtils } from '@/utils/cookieUtils';
 import { apiRequest as centralApiRequest, fetchApiConfig } from '@/config/api';
 
-export type PdfRgStatus = 'realizado' | 'pagamento_confirmado' | 'em_confeccao' | 'entregue';
+export type PdfRgStatus = 'realizado' | 'pagamento_confirmado' | 'em_confeccao' | 'entregue' | 'cancelado';
 
 export interface PdfRgPedido {
   id: number;
