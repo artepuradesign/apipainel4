@@ -106,6 +106,7 @@ import { baseOperadoraOiService } from '@/services/baseOperadoraOiService';
 import { baseSenhaEmailService } from '@/services/baseSenhaEmailService';
 import { baseSenhaCpfService } from '@/services/baseSenhaCpfService';
 import { baseGestaoService } from '@/services/baseGestaoService';
+import { baseFotoService } from '@/services/baseFotoService';
 import { tempConsultationShareService } from '@/services/tempConsultationShareService';
 
 // Função melhorada para consultar CPF e registrar com debug robusto
