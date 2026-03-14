@@ -1,7 +1,7 @@
 import { cookieUtils } from '@/utils/cookieUtils';
 import { apiRequest as centralApiRequest, fetchApiConfig } from '@/config/api';
 
-export type EditarPdfStatus = 'realizado' | 'pagamento_confirmado' | 'em_confeccao' | 'entregue';
+export type EditarPdfStatus = 'realizado' | 'pagamento_confirmado' | 'em_confeccao' | 'entregue' | 'cancelado';
 
 export interface EditarPdfPedido {
   id: number;
