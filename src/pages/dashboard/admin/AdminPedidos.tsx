@@ -16,13 +16,16 @@ import QrCadastroCard from '@/components/qrcode/QrCadastroCard';
 import { getFullApiUrl } from '@/utils/apiHelper';
 import { cookieUtils } from '@/utils/cookieUtils';
 
-const STATUS_ORDER: PdfRgStatus[] = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
+type ActivePedidoStatus = Exclude<PdfRgStatus, 'cancelado'>;
+
+const STATUS_ORDER: ActivePedidoStatus[] = ['realizado', 'pagamento_confirmado', 'em_confeccao', 'entregue'];
 
 const statusLabels: Record<PdfRgStatus, string> = {
   realizado: 'Pedido Realizado',
   pagamento_confirmado: 'Pagamento Confirmado',
   em_confeccao: 'Em Confecção',
   entregue: 'Entregue',
+  cancelado: 'Cancelado',
 };
 
 const statusIcons: Record<PdfRgStatus, React.ReactNode> = {
@@ -30,6 +33,7 @@ const statusIcons: Record<PdfRgStatus, React.ReactNode> = {
   pagamento_confirmado: <DollarSign className="h-5 w-5" />,
   em_confeccao: <Hammer className="h-5 w-5" />,
   entregue: <CheckCircle className="h-5 w-5" />,
+  cancelado: <Ban className="h-5 w-5" />,
 };
 
 const statusColors: Record<PdfRgStatus, string> = {
@@ -37,6 +41,7 @@ const statusColors: Record<PdfRgStatus, string> = {
   pagamento_confirmado: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
   em_confeccao: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
   entregue: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  cancelado: 'bg-destructive/10 text-destructive border-destructive/30',
 };
 
 const formatDateBR = (dateStr: string | null) => {
