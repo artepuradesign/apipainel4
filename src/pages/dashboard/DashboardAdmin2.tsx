@@ -25,6 +25,9 @@ import {
   YAxis,
 } from 'recharts';
 import DashboardTitleCard from '@/components/dashboard/DashboardTitleCard';
+import UnifiedAdminStatsCards from '@/components/dashboard/UnifiedAdminStatsCards';
+import AdminRecentTransactions from '@/components/dashboard/AdminRecentTransactions';
+import OnlineUsersLeaderboard from '@/components/dashboard/OnlineUsersLeaderboard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -119,6 +122,32 @@ const DashboardAdmin2 = () => {
     loadData();
   }, [loadStats, loadTransactions]);
 
+  const recentTransactions = transactions
+    .filter((t) => ['recarga', 'plano', 'compra_modulo', 'entrada', 'consulta', 'compra_login'].includes(t.type))
+    .slice(0, 15);
+
+  const calculatedRecharges = transactions.filter((t) => {
+    const method = (t.payment_method || '').toLowerCase();
+    const isPaymentMethod = ['pix', 'credit', 'paypal', 'cartao', 'card'].some((m) => method.includes(m));
+    return t.type === 'recarga' && isPaymentMethod && t.amount > 0;
+  }).reduce((sum, t) => sum + t.amount, 0);
+
+  const referralTransactions = transactions.filter((t) => t.type === 'indicacao' && t.amount > 0);
+  const calculatedReferrals = referralTransactions.length;
+  const calculatedCommissions = referralTransactions.reduce((sum, t) => sum + t.amount, 0);
+
+  const calculatedCashBalance = transactions
+    .filter((t) => ['recarga', 'plano', 'compra_modulo', 'entrada', 'consulta', 'compra_login'].includes(t.type))
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  const adjustedStats = stats ? {
+    ...stats,
+    cash_balance: calculatedCashBalance || stats.cash_balance || ((stats.payment_pix || 0) + (stats.payment_card || 0) + (stats.payment_paypal || 0)),
+    total_recharges: calculatedRecharges || stats.total_recharges,
+    total_referrals: calculatedReferrals || stats.total_referrals,
+    total_commissions: calculatedCommissions || stats.total_commissions,
+  } : null;
+
   const fluxoData = useMemo(() => {
     const days = 14;
     const map = new Map<string, { date: string; entrada: number; saida: number }>();
@@ -203,13 +232,15 @@ const DashboardAdmin2 = () => {
         backTo="/dashboard/admin"
       />
 
+      <UnifiedAdminStatsCards dashboardStats={adjustedStats} />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Saldo em caixa</span><Wallet className="h-4 w-4" />
             </div>
-            <p className="text-2xl font-bold">{formatCurrency(Number(stats?.cash_balance || 0))}</p>
+            <p className="text-2xl font-bold">{formatCurrency(Number(adjustedStats?.cash_balance || 0))}</p>
           </CardContent>
         </Card>
         <Card>
@@ -301,6 +332,11 @@ const DashboardAdmin2 = () => {
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <AdminRecentTransactions recentTransactions={recentTransactions} />
+        <OnlineUsersLeaderboard />
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <Card className="xl:col-span-2">
           <CardHeader className="pb-2">
@@ -347,7 +383,7 @@ const DashboardAdmin2 = () => {
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="text-sm text-muted-foreground">Usuários online</p>
               <p className="text-2xl font-bold flex items-center gap-2">
-                <Users className="h-5 w-5" /> {Number(stats?.users_online || 0)}
+                <Users className="h-5 w-5" /> {Number(adjustedStats?.users_online || 0)}
               </p>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
@@ -356,7 +392,7 @@ const DashboardAdmin2 = () => {
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="text-sm text-muted-foreground">Total de usuários</p>
-              <p className="text-2xl font-bold">{Number(stats?.total_users || 0)}</p>
+              <p className="text-2xl font-bold">{Number(adjustedStats?.total_users || 0)}</p>
             </div>
             <Button className="w-full" variant="outline" onClick={() => window.location.reload()} disabled={isLoading}>
               <TrendingUp className="h-4 w-4 mr-2" />
