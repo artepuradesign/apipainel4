@@ -232,13 +232,15 @@ const DashboardAdmin2 = () => {
         backTo="/dashboard/admin"
       />
 
+      <UnifiedAdminStatsCards dashboardStats={adjustedStats} />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Saldo em caixa</span><Wallet className="h-4 w-4" />
             </div>
-            <p className="text-2xl font-bold">{formatCurrency(Number(stats?.cash_balance || 0))}</p>
+            <p className="text-2xl font-bold">{formatCurrency(Number(adjustedStats?.cash_balance || 0))}</p>
           </CardContent>
         </Card>
         <Card>
