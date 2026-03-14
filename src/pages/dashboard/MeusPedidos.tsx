@@ -57,7 +57,7 @@ const formatTime = (dateString: string | null) => {
   return new Date(dateString).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
-const getStatusIndex = (status: PdfRgStatus) => STATUS_ORDER.indexOf(status);
+const getStatusIndex = (status: PdfRgStatus) => status === 'cancelado' ? -1 : STATUS_ORDER.indexOf(status);
 
 type UnifiedPedido = {
   type: 'pdf-rg' | 'pdf-personalizado';
