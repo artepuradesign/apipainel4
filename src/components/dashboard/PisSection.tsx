@@ -58,7 +58,7 @@ const PisSection: React.FC<PisSectionProps> = ({ pis, onEdit, enableCopy = true 
               </Button>
             )}
 
-            {hasData && (
+            {hasData && enableCopy && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -68,7 +68,7 @@ const PisSection: React.FC<PisSectionProps> = ({ pis, onEdit, enableCopy = true 
               >
                 <Copy className="h-4 w-4" />
               </Button>
-            )}
+            )
 
             <Badge
               variant="secondary"
