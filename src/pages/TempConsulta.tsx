@@ -66,18 +66,22 @@ const normalizeCollection = (value: unknown): SharedRecord[] =>
 
 const formatRenda = (value: unknown) => {
   if (!hasValue(value)) return '';
-  if (typeof value === 'number') {
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  if (typeof value === 'string' && (value.includes('R$') || /[A-Za-z]/.test(value))) {
+    return value;
   }
 
-  const stringValue = String(value).trim();
-  const numeric = Number(stringValue.replace(/\./g, '').replace(',', '.'));
+  const numericValue =
+    typeof value === 'number' ? value : parseFloat(String(value).replace(/[^\d.-]/g, ''));
 
-  if (!Number.isNaN(numeric) && stringValue !== '') {
-    return numeric.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  if (!Number.isNaN(numericValue)) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(numericValue / 100);
   }
 
-  return stringValue;
+  return String(value);
 };
 
 const formatDateOnly = (value: string) => {
