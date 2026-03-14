@@ -332,6 +332,11 @@ const DashboardAdmin2 = () => {
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <AdminRecentTransactions recentTransactions={recentTransactions} />
+        <OnlineUsersLeaderboard />
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <Card className="xl:col-span-2">
           <CardHeader className="pb-2">
@@ -378,7 +383,7 @@ const DashboardAdmin2 = () => {
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="text-sm text-muted-foreground">Usuários online</p>
               <p className="text-2xl font-bold flex items-center gap-2">
-                <Users className="h-5 w-5" /> {Number(stats?.users_online || 0)}
+                <Users className="h-5 w-5" /> {Number(adjustedStats?.users_online || 0)}
               </p>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
@@ -387,7 +392,7 @@ const DashboardAdmin2 = () => {
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="text-sm text-muted-foreground">Total de usuários</p>
-              <p className="text-2xl font-bold">{Number(stats?.total_users || 0)}</p>
+              <p className="text-2xl font-bold">{Number(adjustedStats?.total_users || 0)}</p>
             </div>
             <Button className="w-full" variant="outline" onClick={() => window.location.reload()} disabled={isLoading}>
               <TrendingUp className="h-4 w-4 mr-2" />
