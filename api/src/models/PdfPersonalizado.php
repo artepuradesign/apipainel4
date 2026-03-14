@@ -147,6 +147,16 @@ class PdfPersonalizado extends BaseModel {
             throw new Exception('Status inválido: ' . $status);
         }
 
+        $stmtLocked = $this->db->prepare("SELECT status FROM {$this->table} WHERE id = ? LIMIT 1");
+        $stmtLocked->execute([(int)$id]);
+        $current = $stmtLocked->fetch(PDO::FETCH_ASSOC);
+        if (!$current) {
+            throw new Exception('Pedido não encontrado');
+        }
+        if (($current['status'] ?? null) === 'cancelado') {
+            throw new Exception('Pedido cancelado não pode ter status alterado');
+        }
+
         $now = date('Y-m-d H:i:s');
         $sets = ['status = ?', 'updated_at = ?'];
         $params = [$status, $now];
