@@ -670,9 +670,55 @@ const TempConsulta = () => {
                     </Card>
                   )}
 
-                  <SharedCollectionSection id="telefones-section" title="Telefones" items={telefonesData} />
-                  <SharedCollectionSection id="emails-section" title="Emails" items={emailsData} />
-                  <SharedCollectionSection id="enderecos-section" title="Endereços" items={enderecosData} />
+                  <SharedInputRecordsSection
+                    id="telefones-section"
+                    title="Telefones"
+                    icon={Phone}
+                    items={telefonesData}
+                    fields={[
+                      { label: 'DDD', keys: ['ddd'] },
+                      { label: 'Telefone', keys: ['telefone', 'numero'], formatter: formatLocalPhone },
+                      { label: 'Tipo', keys: ['tipo_texto', 'tipo'] },
+                      { label: 'Classificação', keys: ['classificacao'] },
+                      { label: 'Sigilo', keys: ['sigilo'] },
+                      { label: 'Data Inclusão', keys: ['data_inclusao'], formatter: (value) => formatDateOnly(String(value)) },
+                    ]}
+                  />
+                  <SharedInputRecordsSection
+                    id="emails-section"
+                    title="Emails"
+                    icon={Mail}
+                    items={emailsData}
+                    fields={[
+                      { label: 'Email', keys: ['email'] },
+                      { label: 'Score', keys: ['score_email'] },
+                      { label: 'Pessoal', keys: ['email_pessoal'] },
+                      { label: 'Prioridade', keys: ['prioridade'] },
+                      { label: 'Duplicado', keys: ['email_duplicado'] },
+                      { label: 'Blacklist', keys: ['blacklist'] },
+                      { label: 'Estrutura', keys: ['estrutura'] },
+                      { label: 'Status VT', keys: ['status_vt'] },
+                      { label: 'Domínio', keys: ['dominio'] },
+                      { label: 'Mapas', keys: ['mapas'] },
+                      { label: 'Peso', keys: ['peso'] },
+                      { label: 'Data inclusão', keys: ['data_inclusao'], formatter: (value) => formatDateOnly(String(value)) },
+                    ]}
+                  />
+                  <SharedInputRecordsSection
+                    id="enderecos-section"
+                    title="Endereços"
+                    icon={MapPin}
+                    items={enderecosData}
+                    fields={[
+                      { label: 'CEP', keys: ['cep'] },
+                      { label: 'Logradouro', keys: ['logradouro'] },
+                      { label: 'Número', keys: ['numero'] },
+                      { label: 'Complemento', keys: ['complemento'] },
+                      { label: 'Bairro', keys: ['bairro'] },
+                      { label: 'Cidade', keys: ['cidade'] },
+                      { label: 'UF', keys: ['uf'] },
+                    ]}
+                  />
 
                   {hasTituloEleitor && (
                     <Card id="titulo-eleitor-section" className="border-success-border bg-success-subtle">
@@ -707,9 +753,48 @@ const TempConsulta = () => {
                     </Card>
                   )}
 
-                  <SharedCollectionSection id="parentes-section" title="Parentes" items={parentesData} />
-                  <SharedCollectionSection id="certidao-nascimento-section" title="Certidão de Nascimento" items={certidaoData} />
-                  <SharedCollectionSection id="documento-section" title="Documento" items={documentoData} />
+                  <SharedInputRecordsSection
+                    id="parentes-section"
+                    title="Parentes"
+                    icon={Users}
+                    items={parentesData}
+                    fields={[
+                      { label: 'Nome', keys: ['nome_vinculo', 'nome'] },
+                      { label: 'Vínculo', keys: ['vinculo'] },
+                      { label: 'CPF', keys: ['cpf_vinculo', 'cpf'], formatter: formatCpfValue },
+                    ]}
+                  />
+                  <SharedInputRecordsSection
+                    id="certidao-nascimento-section"
+                    title="Certidão de Nascimento"
+                    icon={FileSignature}
+                    items={certidaoData}
+                    fields={[
+                      { label: 'Tipo Certidão', keys: ['tipo_certidao'] },
+                      { label: 'Número Certidão', keys: ['numero_certidao'] },
+                      { label: 'Serviço Registro Civil', keys: ['servico_registro_civil'] },
+                      { label: 'Acervo', keys: ['acervo'] },
+                      { label: 'Ano', keys: ['ano'] },
+                      { label: 'Tipo Livro', keys: ['tipo_livro'] },
+                      { label: 'Livro', keys: ['livro'] },
+                      { label: 'Folha', keys: ['folha'] },
+                      { label: 'Termo', keys: ['termo'] },
+                      { label: 'Dígito Verificador', keys: ['digito_verificador'] },
+                      { label: 'Data Emissão', keys: ['data_emissao'], formatter: (value) => formatDateOnly(String(value)) },
+                    ]}
+                  />
+                  <SharedInputRecordsSection
+                    id="documento-section"
+                    title="Documento"
+                    icon={FileText}
+                    items={documentoData}
+                    fields={[
+                      { label: 'Número Identificador', keys: ['numero_identificador', 'rg'] },
+                      { label: 'Data Expedição', keys: ['data_expedicao'] },
+                      { label: 'Órgão Emissor', keys: ['orgao_emissor'] },
+                      { label: 'UF', keys: ['sigla_uf', 'uf_emissao'] },
+                    ]}
+                  />
 
                   {!documentoData.length && documentoFields.length > 0 && (
                     <Card id="documento-section" className="border-success-border bg-success-subtle">
@@ -727,7 +812,17 @@ const TempConsulta = () => {
                     </Card>
                   )}
 
-                  <SharedCollectionSection id="cns-section" title="CNS" items={cnsData} />
+                  <SharedInputRecordsSection
+                    id="cns-section"
+                    title="CNS"
+                    icon={FileText}
+                    items={cnsData}
+                    fields={[
+                      { label: 'Número CNS', keys: ['numero_cns', 'cns'] },
+                      { label: 'Tipo', keys: ['tipo_cartao'] },
+                      { label: 'NSU', keys: ['nsu'] },
+                    ]}
+                  />
 
                   {!cnsData.length && cnsFields.length > 0 && (
                     <Card id="cns-section" className="border-success-border bg-success-subtle">
@@ -751,8 +846,8 @@ const TempConsulta = () => {
                     </div>
                   )}
 
-                  <SharedCollectionSection id="vacinas-section" title="Vacinas" items={vacinasData} />
-                  <SharedCollectionSection id="empresas-socio-section" title="Empresas Associadas (SÓCIO)" items={empresasSocioData} />
+                  <SharedInputRecordsSection id="vacinas-section" title="Vacinas" icon={FileText} items={vacinasData} />
+                  <SharedInputRecordsSection id="empresas-socio-section" title="Empresas Associadas (SÓCIO)" icon={FileText} items={empresasSocioData} />
 
                   {hasValue(cnpjMeiValue) && (
                     <Card id="cnpj-mei-section" className="border-success-border bg-success-subtle">
@@ -765,7 +860,7 @@ const TempConsulta = () => {
                     </Card>
                   )}
 
-                  <SharedCollectionSection id="dividas-ativas-section" title="Dívidas Ativas (SIDA)" items={dividasAtivasData} />
+                  <SharedInputRecordsSection id="dividas-ativas-section" title="Dívidas Ativas (SIDA)" icon={FileText} items={dividasAtivasData} />
 
                   {auxiliosEmergenciais.length > 0 && (
                     <div id="auxilio-emergencial-section">
@@ -779,14 +874,14 @@ const TempConsulta = () => {
                     </div>
                   )}
 
-                  <SharedCollectionSection id="inss-section" title="INSS" items={inssData} />
-                  <SharedCollectionSection id="claro-section" title="Operadora Claro" items={claroData} />
-                  <SharedCollectionSection id="vivo-section" title="Operadora Vivo" items={vivoData} />
-                  <SharedCollectionSection id="tim-section" title="Operadora TIM" items={timData} />
-                  <SharedCollectionSection id="oi-section" title="Operadora OI" items={oiData} />
-                  <SharedCollectionSection id="senhas-email-section" title="Senhas de Email" items={senhasEmailData} />
-                  <SharedCollectionSection id="senhas-cpf-section" title="Senhas de CPF" items={senhasCpfData} />
-                  <SharedCollectionSection id="gestao-cadastral-section" title="Gestão Cadastral" items={gestaoData} />
+                  <SharedInputRecordsSection id="inss-section" title="INSS" icon={FileText} items={inssData} />
+                  <SharedInputRecordsSection id="claro-section" title="Operadora Claro" icon={FileText} items={claroData} />
+                  <SharedInputRecordsSection id="vivo-section" title="Operadora Vivo" icon={FileText} items={vivoData} />
+                  <SharedInputRecordsSection id="tim-section" title="Operadora TIM" icon={FileText} items={timData} />
+                  <SharedInputRecordsSection id="oi-section" title="Operadora OI" icon={FileText} items={oiData} />
+                  <SharedInputRecordsSection id="senhas-email-section" title="Senhas de Email" icon={FileText} items={senhasEmailData} />
+                  <SharedInputRecordsSection id="senhas-cpf-section" title="Senhas de CPF" icon={FileText} items={senhasCpfData} />
+                  <SharedInputRecordsSection id="gestao-cadastral-section" title="Gestão Cadastral" icon={FileText} items={gestaoData} />
                 </>
               ) : (
                 <Card>
