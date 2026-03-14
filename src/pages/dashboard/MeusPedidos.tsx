@@ -362,10 +362,13 @@ const MeusPedidos = () => {
 
       if (res.success) {
         toast.success('Pedido cancelado com sucesso');
-        setPedidos((prev) => prev.filter((item) => !(item.type === pedido.type && item.id === pedido.id)));
+        setPedidos((prev) => prev.map((item) => (
+          item.type === pedido.type && item.id === pedido.id
+            ? { ...item, status: 'cancelado' as PdfRgStatus }
+            : item
+        )));
         if (selectedPedido && selectedPedido.type === pedido.type && selectedPedido.id === pedido.id) {
-          setShowModal(false);
-          setSelectedPedido(null);
+          setSelectedPedido({ ...selectedPedido, status: 'cancelado' as PdfRgStatus });
         }
       } else {
         toast.error(res.error || 'Erro ao cancelar pedido');
